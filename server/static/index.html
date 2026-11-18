@@ -1,107 +1,259 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cough Prescreening Demo — Live Acoustic Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg-base: #0a0f1d;
-      --bg-surface: #111827;
-      --bg-card: #1f2937;
-      --bg-card-hover: #283548;
-      --border-color: #374151;
-      --text-primary: #f3f4f6;
-      --text-secondary: #9ca3af;
-      --text-muted: #6b7280;
-      --color-healthy: #10b981;
-      --color-healthy-bg: rgba(16, 185, 129, 0.15);
-      --color-suspect: #ef4444;
-      --color-suspect-bg: rgba(239, 68, 68, 0.18);
-      --color-nocough: #f59e0b;
-      --color-nocough-bg: rgba(245, 158, 11, 0.15);
-      --color-cyan: #06b6d4;
-      --color-blue: #3b82f6;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    /* ---------------- THEME TOKENS ---------------- */
+    :root, [data-theme="light"] {
+      --bg-base: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-card: #f8fafc;
+      --bg-card-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      --card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+      --card-shadow-hover: 0 10px 25px -3px rgba(15, 23, 42, 0.08);
+
+      --color-healthy: #059669;
+      --color-healthy-bg: #ecfdf5;
+      --color-healthy-border: #a7f3d0;
+      --color-suspect: #dc2626;
+      --color-suspect-bg: #fef2f2;
+      --color-suspect-border: #fecaca;
+      --color-nocough: #d97706;
+      --color-nocough-bg: #fffbeb;
+      --color-nocough-border: #fde68a;
+
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-tint: rgba(37, 99, 235, 0.08);
+
+      --canvas-bg: #f8fafc;
+      --canvas-grid: rgba(148, 163, 184, 0.2);
+      --osc-stroke: #2563eb;
+      --osc-rec: #dc2626;
     }
+
+    [data-theme="dark"] {
+      /* Sophisticated Graphite Dark Grey */
+      --bg-base: #121418;
+      --bg-surface: #1a1d24;
+      --bg-card: #222630;
+      --bg-card-hover: #292e3a;
+      --border-color: #2e3442;
+      --border-subtle: #3d4558;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+      --card-shadow-hover: 0 10px 30px -3px rgba(0, 0, 0, 0.5);
+
+      --color-healthy: #10b981;
+      --color-healthy-bg: rgba(16, 185, 129, 0.14);
+      --color-healthy-border: rgba(16, 185, 129, 0.35);
+      --color-suspect: #ef4444;
+      --color-suspect-bg: rgba(239, 68, 68, 0.16);
+      --color-suspect-border: rgba(239, 68, 68, 0.35);
+      --color-nocough: #f59e0b;
+      --color-nocough-bg: rgba(245, 158, 11, 0.14);
+      --color-nocough-border: rgba(245, 158, 11, 0.35);
+
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --primary-tint: rgba(59, 130, 246, 0.12);
+
+      --canvas-bg: #0d1015;
+      --canvas-grid: rgba(255, 255, 255, 0.06);
+      --osc-stroke: #38bdf8;
+      --osc-rec: #f87171;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: var(--bg-base);
       color: var(--text-primary);
-      font-family: var(--font-sans);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 16px;
+      padding: 20px 16px;
       line-height: 1.5;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
-    .container { max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
-    /* Disclaimer */
+    .container {
+      max-width: 1140px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Disclaimer Notice */
     .disclaimer-banner {
-      background: linear-gradient(90deg, #78350f, #92400e);
-      border: 1px solid #d97706;
-      border-radius: 8px;
-      padding: 10px 16px;
+      background: linear-gradient(90deg, #fffbeb, #fef3c7);
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 12px 18px;
       font-size: 0.85rem;
-      color: #fef3c7;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    [data-theme="dark"] .disclaimer-banner {
+      background: linear-gradient(90deg, #2b1f0c, #3b280c);
+      border-color: #78350f;
+      color: #fde68a;
+    }
+    .disclaimer-banner strong { font-weight: 700; color: #78350f; }
+    [data-theme="dark"] .disclaimer-banner strong { color: #fef3c7; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      background-color: var(--bg-surface);
+      padding: 16px 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--card-shadow);
+    }
+    .header-title h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.3px;
+    }
+    .header-title p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .header-controls {
       display: flex;
       align-items: center;
       gap: 12px;
     }
-    .disclaimer-banner strong { color: #fff; font-weight: 700; }
-
-    /* Header */
-    header {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-      background-color: var(--bg-surface); padding: 14px 20px; border-radius: 10px; border: 1px solid var(--border-color);
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      font-weight: 600;
     }
-    .header-title h1 { font-size: 1.25rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
-    .header-title p { font-size: 0.8rem; color: var(--text-secondary); }
-    .header-status { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
-    .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 9999px; background: #1e293b; border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 0.75rem; }
-    .status-dot { width: 9px; height: 9px; border-radius: 50%; background-color: #ef4444; display: inline-block; transition: all 0.3s; }
-    .status-dot.connected { background-color: #10b981; box-shadow: 0 0 10px rgba(16,185,129,0.8); }
-    .model-tag { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-    .model-tag.trained { background-color: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #059669; }
-    .model-tag.dummy { background-color: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid #b45309; }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background-color: #ef4444;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    .status-dot.connected {
+      background-color: #10b981;
+      box-shadow: 0 0 10px rgba(16,185,129,0.7);
+    }
+    .model-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .model-tag.trained {
+      background-color: var(--color-healthy-bg);
+      color: var(--color-healthy);
+      border: 1px solid var(--color-healthy-border);
+    }
+    .model-tag.dummy {
+      background-color: var(--color-nocough-bg);
+      color: var(--color-nocough);
+      border: 1px solid var(--color-nocough-border);
+    }
+
+    /* Theme Toggle Button */
+    .theme-toggle-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--primary);
+      transform: rotate(15deg);
+    }
 
     /* Step Card Base */
     .step-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 16px;
+      padding: 22px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      position: relative;
+      box-shadow: var(--card-shadow);
+      transition: all 0.25s ease;
     }
     .step-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 12px;
+      padding-bottom: 14px;
     }
     .step-title {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text-primary);
       display: flex;
       align-items: center;
       gap: 10px;
     }
     .step-pill {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 800;
       text-transform: uppercase;
-      padding: 3px 10px;
+      padding: 4px 12px;
       border-radius: 9999px;
-      background: #2563eb;
+      background: var(--primary);
       color: #fff;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     /* Step 1: Recording Section */
@@ -109,42 +261,47 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      padding: 10px 0;
+      gap: 14px;
+      padding: 8px 0;
     }
     .trigger-btn {
       background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: #fff;
       border: none;
-      padding: 16px 44px;
-      font-size: 1.2rem;
-      font-weight: 700;
+      padding: 16px 46px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      font-family: inherit;
       border-radius: 9999px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 4px 20px rgba(37,99,235,0.4);
-      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       user-select: none;
+      letter-spacing: 0.4px;
     }
-    .trigger-btn:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); transform: translateY(-2px); }
+    .trigger-btn:hover {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37,99,235,0.45);
+    }
     .trigger-btn:active { transform: translateY(1px); }
     .trigger-btn.recording {
-      background: linear-gradient(135deg, #dc2626, #991b1b);
-      box-shadow: 0 0 25px rgba(220,38,38,0.8);
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      box-shadow: 0 0 25px rgba(239,68,68,0.7);
       animation: record-pulse 0.7s infinite alternate;
     }
     @keyframes record-pulse {
-      0% { transform: scale(1); box-shadow: 0 0 15px rgba(220,38,38,0.5); }
-      100% { transform: scale(1.03); box-shadow: 0 0 30px rgba(220,38,38,0.9); }
+      0% { transform: scale(1); box-shadow: 0 0 15px rgba(239,68,68,0.4); }
+      100% { transform: scale(1.03); box-shadow: 0 0 32px rgba(239,68,68,0.8); }
     }
     .recording-timer {
-      font-size: 1.8rem;
+      font-size: 1.85rem;
       font-weight: 800;
-      font-family: var(--font-mono);
-      color: #f87171;
-      letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #ef4444;
       display: none;
     }
     .hardware-status-row {
@@ -152,20 +309,20 @@
       align-items: center;
       gap: 10px;
       font-size: 0.85rem;
-      font-family: var(--font-mono);
+      font-family: 'JetBrains Mono', monospace;
       color: var(--text-secondary);
     }
     .blue-led-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background-color: #1e3a8a;
-      border: 1px solid #3b82f6;
+      background-color: #94a3b8;
+      border: 1px solid var(--border-color);
       transition: all 0.1s;
     }
     .blue-led-dot.blinking {
-      background-color: #60a5fa;
-      box-shadow: 0 0 16px #3b82f6, 0 0 30px #60a5fa;
+      background-color: #3b82f6;
+      box-shadow: 0 0 16px #3b82f6, 0 0 28px #60a5fa;
       animation: blue-fast-blink 0.14s infinite alternate;
     }
     @keyframes blue-fast-blink {
@@ -173,65 +330,77 @@
       100% { opacity: 1; transform: scale(1.25); }
     }
 
-    /* Oscilloscope */
+    /* Oscilloscope Container */
     .canvas-container {
       position: relative;
       width: 100%;
-      height: 100px;
-      border-radius: 8px;
+      height: 110px;
+      border-radius: 12px;
       overflow: hidden;
-      background-color: #050811;
-      border: 1px solid #1e293b;
+      background-color: var(--canvas-bg);
+      border: 1px solid var(--border-color);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
     }
     canvas#oscilloscope { width: 100%; height: 100%; display: block; }
     .vad-indicator {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 10px;
+      right: 12px;
       font-size: 0.7rem;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: rgba(6,182,212,0.15);
-      color: #06b6d4;
-      border: 1px solid rgba(6,182,212,0.3);
+      font-family: 'JetBrains Mono', monospace;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      color: var(--primary);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--card-shadow);
     }
 
     /* Step 2: Questionnaire Section */
     #questionnaireSection {
       display: none;
-      background: linear-gradient(135deg, #111827 0%, #172033 100%);
-      border: 2px solid #3b82f6;
+      background: var(--bg-surface);
+      border: 2px solid var(--primary);
+      animation: fadeIn 0.3s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .quiz-notice {
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 8px;
-      padding: 12px 16px;
+      background: var(--primary-tint);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 12px;
+      padding: 14px 18px;
       font-size: 0.9rem;
-      color: #bfdbfe;
+      color: var(--text-primary);
       display: flex;
       align-items: center;
       gap: 12px;
     }
     .quiz-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
     }
     .quiz-card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      transition: all 0.15s;
+    }
+    .quiz-card:hover {
+      border-color: var(--border-subtle);
     }
     .quiz-question {
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.86rem;
+      font-weight: 700;
       color: var(--text-primary);
     }
     .quiz-options {
@@ -240,37 +409,45 @@
     }
     .quiz-btn {
       flex: 1;
-      padding: 8px 12px;
-      border-radius: 6px;
+      padding: 9px 12px;
+      border-radius: 8px;
       font-size: 0.82rem;
-      font-weight: 600;
-      background: #111827;
+      font-weight: 700;
+      font-family: inherit;
+      background: var(--bg-surface);
       border: 1px solid var(--border-color);
       color: var(--text-secondary);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.15s ease;
       text-align: center;
       user-select: none;
     }
-    .quiz-btn:hover { background: #1e293b; color: #fff; }
+    .quiz-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
     .quiz-btn.active {
-      background: #2563eb;
-      border-color: #3b82f6;
+      background: var(--primary);
+      border-color: var(--primary);
       color: #fff;
-      box-shadow: 0 0 10px rgba(37,99,235,0.4);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.3);
     }
     .quiz-select {
       width: 100%;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.82rem;
-      background: #111827;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-family: inherit;
+      background: var(--bg-surface);
       border: 1px solid var(--border-color);
-      color: #fff;
+      color: var(--text-primary);
       outline: none;
       cursor: pointer;
     }
-    .quiz-select option { background: #111827; color: #fff; }
+    .quiz-select option {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
 
     .preset-toolbar {
       display: flex;
@@ -278,7 +455,7 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 10px;
-      padding-top: 8px;
+      padding-top: 10px;
       border-top: 1px solid var(--border-color);
     }
     .preset-tags {
@@ -288,60 +465,74 @@
       flex-wrap: wrap;
     }
     .preset-tag {
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #94a3b8;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      font-family: inherit;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
       cursor: pointer;
       transition: all 0.15s;
     }
-    .preset-tag:hover { background: #334155; color: #fff; }
+    .preset-tag:hover {
+      background: var(--primary-tint);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
 
     .quiz-action-bar {
       display: flex;
       gap: 12px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
     .submit-quiz-btn {
       flex: 2;
       background: linear-gradient(135deg, #10b981, #059669);
       color: #fff;
       border: none;
-      padding: 14px 28px;
+      padding: 16px 28px;
       font-size: 1.05rem;
-      font-weight: 700;
-      border-radius: 8px;
+      font-weight: 800;
+      font-family: inherit;
+      border-radius: 12px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+      box-shadow: 0 4px 16px rgba(16,185,129,0.3);
       transition: all 0.2s;
     }
-    .submit-quiz-btn:hover { background: linear-gradient(135deg, #059669, #047857); transform: translateY(-1px); }
+    .submit-quiz-btn:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
     .cancel-quiz-btn {
       flex: 1;
-      background: #1f2937;
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      color: #9ca3af;
-      padding: 14px 20px;
+      color: var(--text-secondary);
+      padding: 16px 20px;
       font-size: 0.95rem;
-      font-weight: 600;
-      border-radius: 8px;
+      font-weight: 700;
+      font-family: inherit;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .cancel-quiz-btn:hover { background: #374151; color: #fff; }
+    .cancel-quiz-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
 
     /* Step 3: Results Section */
     #resultsSection {
       display: none;
       flex-direction: column;
       gap: 16px;
+      animation: fadeIn 0.35s ease-out;
     }
     .results-grid {
       display: grid;
@@ -354,8 +545,8 @@
 
     /* Prediction Card */
     .prediction-display {
-      border-radius: 10px;
-      padding: 20px;
+      border-radius: 14px;
+      padding: 22px;
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -365,15 +556,15 @@
     }
     .prediction-display.healthy {
       border-color: var(--color-healthy);
-      background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, #111827 100%);
+      background: var(--color-healthy-bg);
     }
     .prediction-display.cough_suspect {
       border-color: var(--color-suspect);
-      background: linear-gradient(135deg, rgba(239,68,68,0.18) 0%, #111827 100%);
+      background: var(--color-suspect-bg);
     }
     .prediction-display.no_cough {
       border-color: var(--color-nocough);
-      background: linear-gradient(135deg, rgba(245,158,11,0.15) 0%, #111827 100%);
+      background: var(--color-nocough-bg);
     }
     .pred-header {
       display: flex;
@@ -383,7 +574,7 @@
       gap: 8px;
     }
     .pred-label {
-      font-size: 1.8rem;
+      font-size: 1.85rem;
       font-weight: 800;
       letter-spacing: -0.5px;
     }
@@ -391,18 +582,33 @@
     .pred-label.cough_suspect { color: var(--color-suspect); }
     .pred-label.no_cough { color: var(--color-nocough); }
     .pred-conf {
-      font-size: 1.4rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      color: #fff;
+      font-size: 1.45rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
     }
 
-    /* Prob Bars */
+    /* Probability Bars */
     .prob-bars { display: flex; flex-direction: column; gap: 8px; }
     .prob-row { display: flex; flex-direction: column; gap: 3px; font-size: 0.82rem; }
-    .prob-row-header { display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.78rem; }
-    .prob-bar-track { height: 7px; background-color: #111827; border-radius: 9999px; overflow: hidden; border: 1px solid #1e293b; }
-    .prob-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.4s ease-out; }
+    .prob-row-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .prob-bar-track {
+      height: 8px;
+      background-color: rgba(148, 163, 184, 0.2);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .prob-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.4s ease-out;
+    }
     .prob-bar-fill.healthy { background-color: var(--color-healthy); }
     .prob-bar-fill.cough_suspect { background-color: var(--color-suspect); }
     .prob-bar-fill.no_cough { background-color: var(--color-nocough); }
@@ -415,22 +621,33 @@
       margin-top: 6px;
     }
     .desc-box {
-      background: #111827;
+      background: var(--bg-surface);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 10px;
+      border-radius: 10px;
+      padding: 10px 12px;
       text-align: center;
     }
-    .desc-box-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-    .desc-box-val { font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 2px; }
+    .desc-box-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .desc-box-val {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-top: 3px;
+    }
 
     /* Spectrogram Card */
     .spec-container {
       width: 100%;
-      height: 140px;
+      height: 145px;
       background: #050811;
-      border-radius: 6px;
-      border: 1px solid #1e293b;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
       position: relative;
       overflow: hidden;
       display: flex;
@@ -441,11 +658,12 @@
 
     /* Causes Panel */
     .cause-card {
-      background: #111827;
+      background: var(--bg-surface);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 14px 16px;
       margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
     .cause-card-header {
       display: flex;
@@ -453,57 +671,59 @@
       align-items: flex-start;
       margin-bottom: 6px;
     }
-    .cause-name { font-size: 0.95rem; font-weight: 700; color: #fff; }
-    .cause-subtext { font-size: 0.72rem; color: var(--text-secondary); }
-    .cause-pct { font-size: 1.15rem; font-weight: 800; font-family: var(--font-mono); }
-    .cause-pct.high { color: #ef4444; }
-    .cause-pct.moderate { color: #f59e0b; }
-    .cause-pct.low { color: #10b981; }
+    .cause-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); }
+    .cause-subtext { font-size: 0.74rem; color: var(--text-secondary); }
+    .cause-pct { font-size: 1.2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .cause-pct.high { color: var(--color-suspect); }
+    .cause-pct.moderate { color: var(--color-nocough); }
+    .cause-pct.low { color: var(--color-healthy); }
     .cause-evidence {
       list-style: none;
       padding: 0;
-      margin: 6px 0 0 0;
+      margin: 8px 0 0 0;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
     .cause-evidence li {
       font-size: 0.76rem;
-      color: #94a3b8;
+      color: var(--text-secondary);
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .cause-evidence li::before { content: "•"; color: #3b82f6; font-weight: bold; }
+    .cause-evidence li::before { content: "•"; color: var(--primary); font-weight: bold; }
 
     .reset-btn {
-      background: #1e293b;
-      border: 1px solid #3b82f6;
-      color: #93c5fd;
-      padding: 12px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--primary);
+      padding: 8px 16px;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.84rem;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 6px;
       transition: all 0.2s;
     }
-    .reset-btn:hover { background: #2563eb; color: #fff; }
+    .reset-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Disclaimer -->
+  <!-- Disclaimer Notice -->
   <div class="disclaimer-banner">
-    <span style="font-size:1.2rem;">⚠️</span>
+    <span style="font-size:1.25rem;">⚠️</span>
     <div>
       <strong>RESEARCH & PRESCREENING DEMO ONLY:</strong>
-      Based on the MIT IEEE COVID-19 Cough Classifier paper (Laguarta et al., 2020). This prototype does <em>not</em> provide medical diagnosis.
+      Based on the MIT IEEE COVID-19 Cough Classifier paper (Laguarta et al., 2020). This prototype does <em>not</em> claim clinical accuracy or provide diagnostic medical advice.
     </div>
   </div>
 
@@ -511,14 +731,15 @@
   <header>
     <div class="header-title">
       <h1>🫁 Cough Prescreening Device</h1>
-      <p>ESP32 + INMP441 I2S MEMS Mic (16 kHz PCM) → PyTorch CNN + Cause Engine</p>
+      <p>ESP32 + INMP441 I2S MEMS Mic (16 kHz PCM) → PyTorch CNN + Ranked Cause Engine</p>
     </div>
-    <div class="header-status">
+    <div class="header-controls">
       <div class="status-badge">
         <span class="status-dot" id="statusDot"></span>
         <span id="statusText">Connecting...</span>
       </div>
       <span class="model-tag trained" id="modelTag">TRAINED CNN</span>
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light / Dark Theme" onclick="toggleTheme()">☀️</button>
     </div>
   </header>
 
@@ -559,20 +780,20 @@
         <span class="step-pill" style="background:#10b981;">Step 2</span>
         <span>Clinical Questionnaire Assessment</span>
       </div>
-      <span style="font-size:0.8rem; color:#60a5fa;" id="audioCapturedBadge">✅ Audio Captured</span>
+      <span style="font-size:0.82rem; font-weight:700; color:var(--primary);" id="audioCapturedBadge">✅ Audio Captured</span>
     </div>
 
     <div class="quiz-notice">
-      <span>💡</span>
+      <span style="font-size:1.2rem;">💡</span>
       <div>
-        <strong>Cough recording locked into model!</strong>
-        Based on the MIT protocol, please answer these 8 quick clinical questions to determine and rank possible causes:
+        <strong>Cough audio locked into model!</strong>
+        Based on the MIT study protocol, please answer these 8 clinical questions to identify and rank matching potential causes:
       </div>
     </div>
 
     <!-- Presets Toolbar -->
     <div class="preset-toolbar">
-      <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:600;">Quick Presets:</span>
+      <span style="font-size:0.82rem; color:var(--text-secondary); font-weight:700;">Quick Presets:</span>
       <div class="preset-tags">
         <button class="preset-tag" onclick="applyPreset('cold')">🤧 Viral Cold / Flu</button>
         <button class="preset-tag" onclick="applyPreset('asthma')">🫁 Asthma Flare</button>
@@ -678,7 +899,7 @@
         <span class="step-pill" style="background:#8b5cf6;">Step 3</span>
         <span>Acoustic Inference & Possible Causes Result</span>
       </div>
-      <button class="reset-btn" style="margin:0; padding:6px 14px; font-size:0.8rem;" onclick="resetToStep1()">
+      <button class="reset-btn" onclick="resetToStep1()">
         <span>🔄 Test Another Cough</span>
       </button>
     </div>
@@ -729,7 +950,7 @@
           </div>
 
           <!-- Acoustic Descriptors -->
-          <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-top:6px;">Audio Acoustic Descriptors (Signal Physics)</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-top:4px;">Audio Acoustic Descriptors (Signal Physics)</div>
           <div class="descriptors-grid">
             <div class="desc-box">
               <div class="desc-box-label">Acoustic Type</div>
@@ -751,10 +972,10 @@
         </div>
 
         <!-- Mel Spectrogram Card -->
-        <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; padding:14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:0.85rem; font-weight:600; color:#fff;">Log-Mel Spectrogram (Inferno Heatmap)</span>
-            <span style="font-size:0.72rem; color:var(--text-secondary); font-family:var(--font-mono);">64 Mels × 64 Frames</span>
+        <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:0.88rem; font-weight:700; color:var(--text-primary);">Log-Mel Spectrogram (Inferno Heatmap)</span>
+            <span style="font-size:0.74rem; color:var(--text-secondary); font-family:'JetBrains Mono', monospace;">64 Mels × 64 Frames</span>
           </div>
           <div class="spec-container">
             <canvas id="spectrogram"></canvas>
@@ -763,13 +984,13 @@
       </div>
 
       <!-- Right Column: Ranked Possible Causes -->
-      <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; padding:16px;">
+      <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-size:0.95rem; font-weight:700; color:#fff;">Ranked Possible Causes</span>
-          <span style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">Cause Engine</span>
+          <span style="font-size:0.98rem; font-weight:800; color:var(--text-primary);">Ranked Possible Causes</span>
+          <span style="font-size:0.72rem; color:var(--text-muted); font-family:'JetBrains Mono', monospace;">Cause Engine</span>
         </div>
-        <p style="font-size:0.76rem; color:var(--text-secondary); margin-bottom:12px;">
-          Synthesized from CNN confidence, wet/dry spectral acoustics, and your questionnaire responses:
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:14px;">
+          Synthesized from PyTorch CNN predictions, wet/dry acoustics, and your questionnaire responses:
         </p>
 
         <div id="causeCardsContainer"></div>
@@ -784,6 +1005,7 @@
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const modelTag = document.getElementById('modelTag');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
   const recordTriggerBtn = document.getElementById('recordTriggerBtn');
   const triggerBtnIcon = document.getElementById('triggerBtnIcon');
   const triggerBtnText = document.getElementById('triggerBtnText');
@@ -821,6 +1043,25 @@
   const oscPoints = 120;
   const oscHistory = new Array(oscPoints).fill(0);
   let peakRmsScale = 1500;
+
+  // ---- Theme Toggle ----
+  const savedTheme = localStorage.getItem('fht_theme') || 'light';
+  applyTheme(savedTheme);
+
+  window.toggleTheme = function() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = (current === 'light') ? 'dark' : 'light';
+    applyTheme(next);
+  };
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('fht_theme', theme);
+    if (themeToggleBtn) {
+      themeToggleBtn.textContent = (theme === 'light') ? '🌙' : '☀️';
+      themeToggleBtn.title = (theme === 'light') ? 'Switch to Dark Grey Theme' : 'Switch to Light Theme';
+    }
+  }
 
   // ---- Questionnaire Buttons ----
   window.setQuizBtn = function(el) {
@@ -885,16 +1126,24 @@
     const centerY = h / 2;
     oscCtx.clearRect(0, 0, w, h);
 
-    // Center grid line
-    oscCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+    const isDark = (document.documentElement.getAttribute('data-theme') === 'dark');
+
+    // Grid center line
+    oscCtx.strokeStyle = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(148,163,184,0.3)';
     oscCtx.lineWidth = 1;
     oscCtx.beginPath(); oscCtx.moveTo(0, centerY); oscCtx.lineTo(w, centerY); oscCtx.stroke();
 
     // Waveform line
-    oscCtx.strokeStyle = isRecording ? '#ef4444' : '#06b6d4';
-    oscCtx.lineWidth = 2.0;
-    oscCtx.shadowColor = isRecording ? 'rgba(239,68,68,0.8)' : 'rgba(6,182,212,0.7)';
-    oscCtx.shadowBlur = 8;
+    if (isRecording) {
+      oscCtx.strokeStyle = '#ef4444';
+      oscCtx.shadowColor = 'rgba(239,68,68,0.7)';
+    } else {
+      oscCtx.strokeStyle = isDark ? '#38bdf8' : '#2563eb';
+      oscCtx.shadowColor = isDark ? 'rgba(56,189,248,0.7)' : 'rgba(37,99,235,0.4)';
+    }
+
+    oscCtx.lineWidth = 2.2;
+    oscCtx.shadowBlur = 6;
     oscCtx.beginPath();
     const stepX = w / (oscPoints - 1);
     for (let i = 0; i < oscPoints; i++) {
@@ -943,7 +1192,7 @@
 
     socket.onopen = () => {
       statusDot.className = 'status-dot connected';
-      statusText.textContent = 'Connected (16kHz Stream)';
+      statusText.textContent = 'Live (16kHz Stream)';
     };
 
     socket.onmessage = (event) => {
@@ -952,7 +1201,7 @@
 
     socket.onclose = () => {
       statusDot.className = 'status-dot';
-      statusText.textContent = 'Disconnected (Reconnecting...)';
+      statusText.textContent = 'Disconnected (Retrying...)';
       setTimeout(connectWebSocket, 2000);
     };
 
@@ -986,10 +1235,9 @@
       triggerBtnText.textContent = 'STOP RECORDING';
       hardwareLedDot.className = 'blue-led-dot blinking';
       hardwareLedStatus.textContent = 'ESP32 Blue LED: BLINKING FAST (Capturing Cough)';
-      hardwareLedStatus.style.color = '#60a5fa';
+      hardwareLedStatus.style.color = '#3b82f6';
       vadBadge.textContent = 'RECORDING';
       vadBadge.style.color = '#ef4444';
-      vadBadge.style.borderColor = '#ef4444';
       recordingTimerDisplay.style.display = 'block';
       recordingTimerDisplay.textContent = '0:00';
       recordingStartTime = performance.now();
@@ -1015,7 +1263,6 @@
       hardwareLedStatus.style.color = 'var(--text-secondary)';
       vadBadge.textContent = 'AUDIO LOCKED';
       vadBadge.style.color = '#10b981';
-      vadBadge.style.borderColor = '#10b981';
       if (recordingInterval) { clearInterval(recordingInterval); recordingInterval = null; }
     }
   }
@@ -1120,7 +1367,7 @@
       const d = event.descriptors;
       const typeEl = document.getElementById('descType');
       typeEl.textContent = d.wet_label || (d.is_wet ? 'Wet Cough' : 'Dry Cough');
-      typeEl.style.color = d.is_wet ? '#38bdf8' : '#fbbf24';
+      typeEl.style.color = d.is_wet ? '#0284c7' : '#d97706';
       document.getElementById('descBouts').textContent = `${d.bout_count || 1} bout(s)`;
       document.getElementById('descDur').textContent = `${event.duration_sec}s`;
       document.getElementById('descHarsh').textContent = d.is_harsh ? `Harsh (${d.harshness_score})` : `Mild (${d.harshness_score})`;
@@ -1161,7 +1408,7 @@
           </div>
           <div style="text-align:right;">
             <div class="cause-pct ${pctClass}">${cause.probability}%</div>
-            <span style="font-size:0.68rem; text-transform:uppercase; font-weight:700; color:${pctClass === 'high' ? '#ef4444' : (pctClass === 'moderate' ? '#f59e0b' : '#10b981')};">${pctClass} match</span>
+            <span style="font-size:0.68rem; text-transform:uppercase; font-weight:800; color:${pctClass === 'high' ? 'var(--color-suspect)' : (pctClass === 'moderate' ? 'var(--color-nocough)' : 'var(--color-healthy)')};">${pctClass} match</span>
           </div>
         </div>
         ${evidenceHTML}
