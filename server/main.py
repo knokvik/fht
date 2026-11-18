@@ -40,6 +40,10 @@ pipeline = AudioPipeline(classifier=classifier)
 ui_clients: Set[WebSocket] = set()
 ui_clients_lock = asyncio.Lock()
 
+# Connected Audio WebSocket clients (ESP32 or serial_bridge)
+audio_clients: Set[WebSocket] = set()
+audio_clients_lock = asyncio.Lock()
+
 
 def broadcast_to_ui_sync(message: Dict):
     """Bridge synchronous callback from pipeline thread to asyncio event loop."""
@@ -174,31 +178,35 @@ async def websocket_audio_endpoint(websocket: WebSocket):
     """
     await websocket.accept()
     client_ip = websocket.client.host if websocket.client else "unknown"
-    logger.info(f"[AUDIO WS] ESP32 connected from {client_ip}")
+    logger.info(f"[AUDIO WS] ESP32/Bridge connected from {client_ip}")
+
+    async with audio_clients_lock:
+        audio_clients.add(websocket)
 
     total_bytes = 0
     start_time = asyncio.get_event_loop().time()
 
     try:
         while True:
-            # Receive binary frame (approx 2048 bytes = 1024 int16 samples)
-            data = await websocket.receive_bytes()
-            if not data:
-                continue
-
-            total_bytes += len(data)
-            pipeline.feed_pcm(data)
+            # Can receive bytes or text control ping
+            msg = await websocket.receive()
+            if "bytes" in msg and msg["bytes"]:
+                data = msg["bytes"]
+                total_bytes += len(data)
+                pipeline.feed_pcm(data)
+            elif "text" in msg and msg["text"]:
+                pass
 
     except WebSocketDisconnect:
         elapsed = max(0.1, asyncio.get_event_loop().time() - start_time)
         kbps = (total_bytes * 8) / (elapsed * 1000)
-        logger.info(f"[AUDIO WS] ESP32 disconnected ({client_ip}). Streamed {total_bytes / 1024:.1f} KB at {kbps:.1f} kbps.")
+        logger.info(f"[AUDIO WS] Client disconnected ({client_ip}). Streamed {total_bytes / 1024:.1f} KB at {kbps:.1f} kbps.")
     except Exception as e:
         logger.error(f"[AUDIO WS ERROR] Exception on audio socket: {e}")
-        try:
-            await websocket.close()
-        except Exception:
-            pass
+    finally:
+        async with audio_clients_lock:
+            if websocket in audio_clients:
+                audio_clients.remove(websocket)
 
 
 @app.websocket("/ws/ui")
@@ -206,6 +214,7 @@ async def websocket_ui_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for browser dashboard.
     Pushes live audio level telemetry and cough prediction events.
+    Listens for user trigger commands to start recording sessions.
     """
     await websocket.accept()
     client_ip = websocket.client.host if websocket.client else "unknown"
@@ -214,7 +223,6 @@ async def websocket_ui_endpoint(websocket: WebSocket):
     async with ui_clients_lock:
         ui_clients.add(websocket)
 
-    # Send initial connection acknowledgment & system status
     try:
         init_msg = {
             "type": "init",
@@ -226,16 +234,43 @@ async def websocket_ui_endpoint(websocket: WebSocket):
         }
         await websocket.send_text(json.dumps(init_msg))
 
-        # Keep connection alive and listen for any incoming client messages (e.g. ping/re-test)
         while True:
             text = await websocket.receive_text()
-            # Handle client commands if any
             try:
                 data = json.loads(text)
-                if data.get("action") == "ping":
+                action = data.get("action")
+
+                if action == "start_session":
+                    duration = float(data.get("duration", 3.0))
+                    logger.info(f"[UI WS] User triggered screening session ({duration}s). Commanding ESP32 blue LED...")
+
+                    # 1. Trigger hardware LED on ESP32 via audio clients
+                    control_msg = json.dumps({
+                        "type": "control",
+                        "command": "start_recording",
+                        "duration": duration,
+                    })
+                    async with audio_clients_lock:
+                        for ws_audio in list(audio_clients):
+                            try:
+                                await ws_audio.send_text(control_msg)
+                            except Exception:
+                                pass
+
+                    # 2. Start audio accumulation session in pipeline
+                    pipeline.start_manual_session(duration_sec=duration)
+
+                    # 3. Broadcast session status to UI clients
+                    await _broadcast_to_ui({
+                        "type": "session_state",
+                        "state": "recording",
+                        "duration": duration,
+                    })
+
+                elif action == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Error handling UI message: {e}")
 
     except WebSocketDisconnect:
         logger.info(f"[UI WS] Dashboard client disconnected ({client_ip})")

@@ -24,6 +24,9 @@
       
       --color-cyan: #06b6d4;
       --color-cyan-glow: rgba(6, 182, 212, 0.35);
+      --color-blue: #3b82f6;
+      --color-blue-glow: rgba(59, 130, 246, 0.6);
+      
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
@@ -157,6 +160,110 @@
       border: 1px solid #059669;
     }
 
+    /* ACTION TRIGGER CARD (Recording Session) */
+    .trigger-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #3b82f6;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .trigger-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .trigger-btn {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      z-index: 1;
+    }
+    .trigger-btn:hover {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(59, 130, 246, 0.6);
+    }
+    .trigger-btn:active {
+      transform: translateY(1px);
+    }
+    .trigger-btn.recording {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      box-shadow: 0 0 25px rgba(220, 38, 38, 0.8);
+      animation: record-pulse 0.7s infinite alternate;
+    }
+    @keyframes record-pulse {
+      0% { transform: scale(1); box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
+      100% { transform: scale(1.03); box-shadow: 0 0 30px rgba(220, 38, 38, 0.9); }
+    }
+
+    .led-hardware-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      z-index: 1;
+    }
+    .blue-led-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #1e3a8a;
+      border: 1px solid #3b82f6;
+      transition: all 0.1s ease;
+    }
+    .blue-led-dot.blinking {
+      background-color: #60a5fa;
+      box-shadow: 0 0 16px #3b82f6, 0 0 30px #60a5fa;
+      animation: blue-fast-blink 0.14s infinite alternate;
+    }
+    @keyframes blue-fast-blink {
+      0% { opacity: 0.2; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1.25); }
+    }
+
+    .countdown-bar-container {
+      width: 100%;
+      max-width: 480px;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      overflow: hidden;
+      display: none;
+      z-index: 1;
+    }
+    .countdown-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      transition: width 0.1s linear;
+    }
+
     /* Grid Layout */
     .dashboard-grid {
       display: grid;
@@ -230,6 +337,12 @@
       border-color: #f87171;
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
     }
+    .vad-indicator.session {
+      background: rgba(59, 130, 246, 0.85);
+      color: #fff;
+      border-color: #60a5fa;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.85);
+    }
 
     /* Audio Metrics Strip */
     .audio-stats-strip {
@@ -286,15 +399,6 @@
       transition: width 0.08s linear;
       border-radius: 4px;
     }
-    .meter-threshold-marker {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background-color: #f87171;
-      box-shadow: 0 0 4px #ef4444;
-      display: none;
-    }
 
     /* Big Prediction Card */
     .prediction-display {
@@ -302,12 +406,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px 12px;
+      padding: 24px 16px;
       border-radius: 8px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       transition: all 0.3s ease;
       text-align: center;
+      min-height: 140px;
     }
     .prediction-display.healthy {
       background: var(--color-healthy-bg);
@@ -335,7 +440,7 @@
       font-size: 2rem;
       font-weight: 800;
       letter-spacing: -0.02em;
-      color: #e5e7eb;
+      color: #94a3b8;
       margin-bottom: 2px;
       transition: color 0.3s;
     }
@@ -344,8 +449,8 @@
     .pred-label.no_cough { color: #fbbf24; }
 
     .pred-conf {
-      font-size: 1.25rem;
-      font-weight: 700;
+      font-size: 1.15rem;
+      font-weight: 600;
       font-family: var(--font-mono);
       color: var(--text-secondary);
     }
@@ -401,39 +506,37 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
       background-color: #1e293b;
-      user-select: none;
       font-size: 0.85rem;
       font-weight: 600;
     }
-    .spectrogram-header:hover {
-      background-color: #24334a;
-    }
-    .spectrogram-header .chevron {
-      transition: transform 0.2s ease;
-    }
-    .spectrogram-header.collapsed .chevron {
-      transform: rotate(-90deg);
-    }
     .spectrogram-body {
-      padding: 12px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       align-items: center;
-    }
-    .spectrogram-body.hidden {
-      display: none;
+      position: relative;
     }
     canvas#spectrogramCanvas {
       width: 100%;
       max-width: 520px;
       height: 140px;
-      background-color: #000;
+      background-color: #050811;
       border-radius: 4px;
       border: 1px solid #374151;
       image-rendering: pixelated;
+    }
+    .spec-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      pointer-events: none;
+      text-align: center;
     }
     .spec-legend {
       display: flex;
@@ -447,7 +550,7 @@
 
     /* Event Log Table */
     .event-log-container {
-      max-height: 250px;
+      max-height: 220px;
       overflow-y: auto;
       border-radius: 6px;
       border: 1px solid var(--border-color);
@@ -475,9 +578,6 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       color: var(--text-primary);
     }
-    table.event-table tr:hover {
-      background-color: rgba(255, 255, 255, 0.03);
-    }
     .badge-pill {
       display: inline-block;
       padding: 2px 7px;
@@ -502,19 +602,11 @@
       border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
-    /* Footer */
     footer {
       margin-top: 8px;
       text-align: center;
       font-size: 0.75rem;
       color: var(--text-muted);
-    }
-    footer a {
-      color: #38bdf8;
-      text-decoration: none;
-    }
-    footer a:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
@@ -527,7 +619,7 @@
     <div style="font-size: 1.3rem;">⚠️</div>
     <div>
       <strong>ACADEMIC RESEARCH & PRESCREENING DEMO ONLY — NOT A MEDICAL DEVICE</strong><br>
-      This software pipeline is an IoT proof-of-concept based on the MIT paper <em>"COVID-19 AI Diagnosis Using Only Cough Recordings"</em> (Laguarta et al., IEEE OJEMB 2020). It does <strong>NOT</strong> diagnose COVID-19 or any illness. Never use for clinical diagnostic decisions.
+      Acoustic AI concept demonstrator based on Laguarta et al. (IEEE OJEMB 2020). For informational and screening demonstration only.
     </div>
   </div>
 
@@ -542,17 +634,34 @@
         </svg>
         Cough Prescreening Pipeline
       </h1>
-      <p>ESP32 (INMP441) → WiFi WebSocket → PC CNN Inference → Live Web Dashboard</p>
+      <p>ESP32 (INMP441) → Audio Stream → PyTorch CNN Inference → Live Dashboard</p>
     </div>
 
     <div class="header-status">
       <div id="modelTag" class="model-tag dummy">Initializing</div>
       <div class="status-badge">
         <span id="statusDot" class="status-dot connecting"></span>
-        <span id="statusText">Connecting to server...</span>
+        <span id="statusText">Connecting...</span>
       </div>
     </div>
   </header>
+
+  <!-- INTERACTIVE RECORDING CONTROL CARD -->
+  <div class="trigger-card">
+    <button id="recordTriggerBtn" class="trigger-btn">
+      <span style="font-size: 1.3rem;">🔴</span>
+      <span id="triggerBtnText">START PRESCREENING (3s RECORD)</span>
+    </button>
+    
+    <div class="led-hardware-indicator">
+      <span id="hardwareLedDot" class="blue-led-dot"></span>
+      <span id="hardwareLedStatus">ESP32 Blue LED: Standby (Click above to record)</span>
+    </div>
+
+    <div id="countdownBarContainer" class="countdown-bar-container">
+      <div id="countdownBarFill" class="countdown-bar-fill"></div>
+    </div>
+  </div>
 
   <!-- Main Grid -->
   <div class="dashboard-grid">
@@ -575,12 +684,11 @@
         <!-- Level Meter -->
         <div class="meter-container">
           <div class="meter-labels">
-            <span>Audio RMS Level</span>
+            <span>Live Microphone RMS Level</span>
             <span id="levelValueText">0.0 RMS</span>
           </div>
           <div class="meter-track">
             <div id="meterFill" class="meter-fill"></div>
-            <div id="threshMarker" class="meter-threshold-marker"></div>
           </div>
         </div>
 
@@ -601,17 +709,20 @@
         </div>
       </div>
 
-      <!-- Spectrogram Card -->
+      <!-- Spectrogram Heatmap Card (Revealed on Session) -->
       <div class="spectrogram-section">
-        <div id="specHeader" class="spectrogram-header">
-          <span>Mel-Spectrogram (Last Sound Event)</span>
-          <span class="chevron">▼</span>
+        <div class="spectrogram-header">
+          <span>Live Mel-Spectrogram Heatmap</span>
+          <span id="specStatusBadge" class="badge">Awaiting recording session</span>
         </div>
-        <div id="specBody" class="spectrogram-body">
+        <div class="spectrogram-body">
           <canvas id="spectrogramCanvas" width="256" height="128"></canvas>
+          <div id="specPlaceholder" class="spec-placeholder">
+            Click "START PRESCREENING" above to record cough and view heatmap
+          </div>
           <div class="spec-legend">
-            <span>Freq: 50 Hz</span>
-            <span>64 Mel Filterbanks (Log Power dB)</span>
+            <span>50 Hz</span>
+            <span>64 Mel Filterbanks (dB Scale)</span>
             <span>8.0 kHz</span>
           </div>
         </div>
@@ -625,14 +736,14 @@
       <!-- Primary Prediction Card -->
       <div class="card">
         <div class="card-title">
-          <span>Acoustic Classification</span>
-          <span id="lastEventTime" class="badge">Awaiting sound event</span>
+          <span>Prescreening Result</span>
+          <span id="lastEventTime" class="badge">Ready</span>
         </div>
 
         <div id="predictionDisplay" class="prediction-display">
           <span class="pred-pill">CLASSIFICATION RESULT</span>
           <div id="predLabel" class="pred-label">READY</div>
-          <div id="predConf" class="pred-conf">Cough at microphone</div>
+          <div id="predConf" class="pred-conf">Click "START PRESCREENING" to begin</div>
         </div>
 
         <!-- Probability Distribution Bars -->
@@ -674,7 +785,7 @@
       <!-- Event History Log Card -->
       <div class="card" style="flex: 1;">
         <div class="card-title">
-          <span>Detection Event Log</span>
+          <span>Prescreening Event History</span>
           <span id="eventCountBadge" class="badge">0 events</span>
         </div>
 
@@ -691,7 +802,7 @@
             <tbody id="eventLogBody">
               <tr>
                 <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                  No sound events recorded yet. Stream audio from ESP32.
+                  No sessions completed yet. Click Start Prescreening above.
                 </td>
               </tr>
             </tbody>
@@ -704,26 +815,32 @@
   </div>
 
   <footer>
-    FHT Engineering Demo • MIT Laguarta et al. Architecture • ESP32 + INMP441 + PyTorch + FastAPI
+    FHT Engineering Demo • ESP32 (INMP441) + PyTorch CNN + Live Web Dashboard
   </footer>
 
 </div>
 
-<!-- Self-Contained JavaScript (Zero CDN Dependencies) -->
+<!-- Self-Contained JavaScript -->
 <script>
 (() => {
-  // --- DOM Elements ---
+  // DOM Elements
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const modelTag = document.getElementById('modelTag');
   
+  const recordTriggerBtn = document.getElementById('recordTriggerBtn');
+  const triggerBtnText = document.getElementById('triggerBtnText');
+  const hardwareLedDot = document.getElementById('hardwareLedDot');
+  const hardwareLedStatus = document.getElementById('hardwareLedStatus');
+  const countdownBarContainer = document.getElementById('countdownBarContainer');
+  const countdownBarFill = document.getElementById('countdownBarFill');
+
   const oscCanvas = document.getElementById('oscilloscope');
   const oscCtx = oscCanvas.getContext('2d');
   const vadBadge = document.getElementById('vadBadge');
   
   const meterFill = document.getElementById('meterFill');
   const levelValueText = document.getElementById('levelValueText');
-  const threshMarker = document.getElementById('threshMarker');
 
   const statRms = document.getElementById('statRms');
   const statFloor = document.getElementById('statFloor');
@@ -741,21 +858,24 @@
   const probSuspectText = document.getElementById('probSuspectText');
   const probNoCoughText = document.getElementById('probNoCoughText');
 
-  const specHeader = document.getElementById('specHeader');
-  const specBody = document.getElementById('specBody');
   const specCanvas = document.getElementById('spectrogramCanvas');
   const specCtx = specCanvas.getContext('2d');
+  const specStatusBadge = document.getElementById('specStatusBadge');
+  const specPlaceholder = document.getElementById('specPlaceholder');
 
   const eventLogBody = document.getElementById('eventLogBody');
   const eventCountBadge = document.getElementById('eventCountBadge');
 
-  // --- Oscilloscope State ---
+  // Oscilloscope State
   const oscPoints = 120;
   const oscHistory = new Array(oscPoints).fill(0);
-  let peakRmsScale = 1500; // Auto-scaling ceiling
+  let peakRmsScale = 1500;
   let totalEventsCount = 0;
+  let isSessionActive = false;
+  let sessionTimer = null;
+  let sessionStartTime = 0;
+  let sessionDuration = 3.0;
 
-  // Resize canvas for sharp retina displays
   function resizeOscilloscope() {
     const rect = oscCanvas.parentElement.getBoundingClientRect();
     oscCanvas.width = rect.width * window.devicePixelRatio;
@@ -765,13 +885,6 @@
   window.addEventListener('resize', resizeOscilloscope);
   resizeOscilloscope();
 
-  // Collapsible Spectrogram
-  specHeader.addEventListener('click', () => {
-    specHeader.classList.toggle('collapsed');
-    specBody.classList.toggle('hidden');
-  });
-
-  // Render Oscilloscope Frame
   function renderOscilloscope() {
     const w = oscCanvas.width / window.devicePixelRatio;
     const h = oscCanvas.height / window.devicePixelRatio;
@@ -779,7 +892,6 @@
 
     oscCtx.clearRect(0, 0, w, h);
 
-    // Subtle background grid lines
     oscCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
     oscCtx.lineWidth = 1;
     oscCtx.beginPath();
@@ -787,19 +899,16 @@
     oscCtx.lineTo(w, centerY);
     oscCtx.stroke();
 
-    // Waveform line
-    oscCtx.strokeStyle = '#06b6d4';
+    oscCtx.strokeStyle = isSessionActive ? '#ef4444' : '#06b6d4';
     oscCtx.lineWidth = 2.0;
-    oscCtx.shadowColor = 'rgba(6, 182, 212, 0.7)';
+    oscCtx.shadowColor = isSessionActive ? 'rgba(239, 68, 68, 0.8)' : 'rgba(6, 182, 212, 0.7)';
     oscCtx.shadowBlur = 8;
     oscCtx.beginPath();
 
     const stepX = w / (oscPoints - 1);
     for (let i = 0; i < oscPoints; i++) {
       const val = oscHistory[i];
-      // Normalize to height
       const normVal = Math.min(1.0, val / Math.max(800, peakRmsScale));
-      // Symmetrical amplitude oscillation simulation for smooth visual aesthetic
       const yOffset = normVal * (centerY * 0.85) * (i % 2 === 0 ? 1 : -1);
       const y = centerY - yOffset;
       const x = i * stepX;
@@ -814,11 +923,11 @@
   }
   requestAnimationFrame(renderOscilloscope);
 
-  // Render Spectrogram Heatmap
+  // Render Spectrogram Heatmap (Inferno Palette)
   function renderSpectrogram(matrix) {
     if (!matrix || !matrix.length) return;
-    const rows = matrix.length;       // 64 mel bands
-    const cols = matrix[0].length;    // 64 time frames
+    const rows = matrix.length;
+    const cols = matrix[0].length;
     
     specCanvas.width = cols;
     specCanvas.height = rows;
@@ -826,15 +935,12 @@
     const imgData = specCtx.createImageData(cols, rows);
     const data = imgData.data;
 
-    // Magma/Inferno colormap interpolation
     for (let r = 0; r < rows; r++) {
-      // Flip vertical so low frequencies are at bottom
       const rowIdx = rows - 1 - r;
       for (let c = 0; c < cols; c++) {
         const val = Math.max(0, Math.min(1.0, matrix[rowIdx][c]));
         const pixelIdx = (r * cols + c) * 4;
 
-        // Inferno Palette: black -> purple -> red -> orange -> yellow
         let red, green, blue;
         if (val < 0.25) {
           const t = val / 0.25;
@@ -866,9 +972,12 @@
     }
 
     specCtx.putImageData(imgData, 0, 0);
+    specPlaceholder.style.display = 'none';
+    specStatusBadge.textContent = 'Active Result';
+    specStatusBadge.style.color = '#34d399';
   }
 
-  // --- WebSocket Client & Auto-Reconnect ---
+  // WebSocket Connection
   let socket = null;
   let reconnectTimer = null;
 
@@ -906,7 +1015,6 @@
     };
 
     socket.onerror = (err) => {
-      console.warn('WebSocket error:', err);
       socket.close();
     };
   }
@@ -920,73 +1028,128 @@
     }
   }
 
-  // --- Message Dispatcher ---
+  // Handle Recording Trigger Click
+  recordTriggerBtn.addEventListener('click', () => {
+    if (isSessionActive) return;
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      alert("Server is connecting... Please wait a moment.");
+      return;
+    }
+
+    // Send session command to server
+    socket.send(JSON.stringify({
+      action: "start_session",
+      duration: 3.0
+    }));
+
+    startClientSession(3.0);
+  });
+
+  function startClientSession(duration) {
+    isSessionActive = true;
+    sessionDuration = duration;
+    sessionStartTime = performance.now();
+
+    // Visual updates
+    recordTriggerBtn.className = 'trigger-btn recording';
+    triggerBtnText.textContent = 'RECORDING ACTIVE — COUGH NOW!';
+    hardwareLedDot.className = 'blue-led-dot blinking';
+    hardwareLedStatus.textContent = 'ESP32 Blue LED: BLINKING FAST (Recording 3s)';
+    hardwareLedStatus.style.color = '#60a5fa';
+
+    vadBadge.textContent = 'SESSION RECORDING';
+    vadBadge.className = 'vad-indicator session';
+
+    countdownBarContainer.style.display = 'block';
+    countdownBarFill.style.width = '100%';
+
+    // Run countdown animation
+    if (sessionTimer) clearInterval(sessionTimer);
+    sessionTimer = setInterval(() => {
+      const elapsed = (performance.now() - sessionStartTime) / 1000;
+      const remaining = Math.max(0, sessionDuration - elapsed);
+      const pct = (remaining / sessionDuration) * 100;
+      countdownBarFill.style.width = `${pct}%`;
+      triggerBtnText.textContent = `RECORDING (${remaining.toFixed(1)}s) — COUGH NOW!`;
+
+      if (remaining <= 0) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+        triggerBtnText.textContent = 'ANALYZING ACOUSTICS...';
+      }
+    }, 50);
+  }
+
+  function finishClientSession() {
+    isSessionActive = false;
+    if (sessionTimer) {
+      clearInterval(sessionTimer);
+      sessionTimer = null;
+    }
+
+    recordTriggerBtn.className = 'trigger-btn';
+    triggerBtnText.textContent = '🔄 RECORD AGAIN (3s COUGH)';
+    hardwareLedDot.className = 'blue-led-dot';
+    hardwareLedStatus.textContent = 'ESP32 Blue LED: Standby (Session Complete)';
+    hardwareLedStatus.style.color = 'var(--text-secondary)';
+
+    vadBadge.textContent = 'LISTENING';
+    vadBadge.className = 'vad-indicator';
+    countdownBarContainer.style.display = 'none';
+  }
+
+  // Handle Server Messages
   function handleServerMessage(msg) {
     if (msg.type === 'init') {
-      // Model tag
       if (msg.is_dummy_model) {
         modelTag.textContent = 'DUMMY CLASSIFIER';
         modelTag.className = 'model-tag dummy';
-        modelTag.title = 'Running in simulated mode. Train with server/train.py to load real weights.';
       } else {
         modelTag.textContent = 'TRAINED CNN';
         modelTag.className = 'model-tag trained';
       }
     } else if (msg.type === 'level') {
       updateAudioLevel(msg);
+    } else if (msg.type === 'session_state') {
+      if (msg.state === 'recording' && !isSessionActive) {
+        startClientSession(msg.duration || 3.0);
+      }
     } else if (msg.type === 'prediction') {
-      handlePredictionEvent(msg);
+      // Only display prediction & spectrogram if it is a session result
+      handleSessionPrediction(msg);
     }
   }
 
-  // Handle 100ms Level Updates
   function updateAudioLevel(msg) {
     const rms = msg.rms || 0;
     const floor = msg.noise_floor || 0;
     const thresh = msg.threshold || 0;
-    const isEvent = !!msg.is_event;
 
-    // Update stats strip
     statRms.textContent = rms.toFixed(1);
     statFloor.textContent = floor.toFixed(1);
     statThreshold.textContent = thresh.toFixed(1);
 
-    // Update oscilloscope array
     oscHistory.shift();
     oscHistory.push(rms);
     if (rms > peakRmsScale) peakRmsScale = rms * 1.2;
     else peakRmsScale = Math.max(1200, peakRmsScale * 0.995);
 
-    // VAD Badge
-    if (isEvent) {
-      vadBadge.textContent = 'CAPTURING EVENT';
-      vadBadge.className = 'vad-indicator active';
-    } else {
-      vadBadge.textContent = 'LISTENING';
-      vadBadge.className = 'vad-indicator';
-    }
-
-    // Level meter fill (log-like scaling)
     const meterPct = Math.min(100, Math.max(0, (rms / Math.max(500, thresh * 2.5)) * 100));
     meterFill.style.width = `${meterPct}%`;
     levelValueText.textContent = `${rms.toFixed(1)} RMS`;
-
-    // Threshold indicator line on meter
-    const threshPct = Math.min(100, (thresh / Math.max(500, thresh * 2.5)) * 100);
-    threshMarker.style.left = `${threshPct}%`;
-    threshMarker.style.display = 'block';
   }
 
-  // Handle Cough Prediction Event
-  function handlePredictionEvent(event) {
+  function handleSessionPrediction(event) {
+    finishClientSession();
     totalEventsCount++;
-    eventCountBadge.textContent = `${totalEventsCount} event${totalEventsCount === 1 ? '' : 's'}`;
+    eventCountBadge.textContent = `${totalEventsCount} session${totalEventsCount === 1 ? '' : 's'}`;
 
     const label = event.label;
     const conf = (event.confidence * 100).toFixed(1);
     const probs = event.probs || {};
 
-    // Format display card
+    // Update Result Card
     predictionDisplay.className = `prediction-display ${label}`;
     predLabel.className = `pred-label ${label}`;
 
@@ -1015,12 +1178,12 @@
     probNoCoughFill.style.width = `${pNoCough}%`;
     probNoCoughText.textContent = `${pNoCough}%`;
 
-    // Render Spectrogram heatmap if present
+    // Render Spectrogram Heatmap ONLY when result arrives
     if (event.spectrogram) {
       renderSpectrogram(event.spectrogram);
     }
 
-    // Append to Event Log table (newest at top)
+    // Append to Event Log table
     if (totalEventsCount === 1) {
       eventLogBody.innerHTML = '';
     }
@@ -1033,16 +1196,9 @@
       <td>${event.duration_sec}s</td>
     `;
     eventLogBody.insertBefore(row, eventLogBody.firstChild);
-
-    // Keep max 50 rows
-    while (eventLogBody.children.length > 50) {
-      eventLogBody.removeChild(eventLogBody.lastChild);
-    }
   }
 
-  // Initial connect
   connectWebSocket();
-
 })();
 </script>
 

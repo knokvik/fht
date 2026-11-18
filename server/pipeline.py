@@ -208,6 +208,12 @@ class AudioPipeline:
         self.level_subscribers: List[Callable[[Dict], None]] = []
         self.event_subscribers: List[Callable[[Dict], None]] = []
 
+        # Manual Recording Session state
+        self.manual_session_active = False
+        self.manual_session_end_time = 0.0
+        self.manual_session_samples: List[np.ndarray] = []
+        self.manual_session_duration = 3.0
+
         # Background worker control
         self.running = False
         self._worker_task: Optional[asyncio.Task] = None
@@ -264,12 +270,23 @@ class AudioPipeline:
                 pass
         logger.info("[PIPELINE] Audio analysis loop stopped.")
 
+    def start_manual_session(self, duration_sec: float = 3.0):
+        """Starts an active manual recording window triggered by user UI click."""
+        self.manual_session_active = True
+        self.manual_session_duration = duration_sec
+        self.manual_session_end_time = time.time() + duration_sec
+        # Seed with initial attack buffer from ring buffer
+        pre_padding = int(config.SAMPLE_RATE * 0.1)
+        self.manual_session_samples = [self.ring_buffer.get_latest(pre_padding)]
+        logger.info(f"[SESSION] Manual recording session started for {duration_sec}s.")
+
     async def _analysis_loop(self):
         """Processes 100ms audio windows periodically."""
         samples_per_frame = int(config.SAMPLE_RATE * config.ANALYSIS_INTERVAL_SEC)  # 1600 samples
 
         while self.running:
             loop_start = time.time()
+            now = loop_start
 
             # Retrieve latest 100ms frame from ring buffer
             frame_samples = self.ring_buffer.get_latest(samples_per_frame)
@@ -281,9 +298,16 @@ class AudioPipeline:
 
             noise_floor, threshold = self._compute_adaptive_threshold()
 
-            # State Machine: Sound Event Detection
-            is_above_threshold = frame_rms >= threshold
-            await self._process_vad_step(frame_samples, frame_rms, is_above_threshold, noise_floor, threshold)
+            # Handle Manual Session
+            if self.manual_session_active:
+                self.manual_session_samples.append(frame_samples)
+                if now >= self.manual_session_end_time:
+                    self.manual_session_active = False
+                    await self._finalize_manual_session()
+            else:
+                # Background ambient VAD tracking
+                is_above_threshold = frame_rms >= threshold
+                await self._process_vad_step(frame_samples, frame_rms, is_above_threshold, noise_floor, threshold)
 
             # Broadcast lightweight level telemetry
             level_msg = {
@@ -291,7 +315,8 @@ class AudioPipeline:
                 "rms": round(frame_rms, 1),
                 "noise_floor": round(noise_floor, 1),
                 "threshold": round(threshold, 1),
-                "is_event": self.in_event,
+                "is_event": self.in_event or self.manual_session_active,
+                "is_recording_session": self.manual_session_active,
                 "timestamp": time.time(),
             }
             for cb in list(self.level_subscribers):
@@ -304,6 +329,81 @@ class AudioPipeline:
             elapsed = time.time() - loop_start
             sleep_time = max(0.01, config.ANALYSIS_INTERVAL_SEC - elapsed)
             await asyncio.sleep(sleep_time)
+
+    async def _finalize_manual_session(self):
+        """Processes audio recorded during the manual session, runs CNN, and broadcasts."""
+        all_samples = np.concatenate(self.manual_session_samples) if self.manual_session_samples else np.array([], dtype=np.int16)
+        self.manual_session_samples = []
+        duration = self.manual_session_duration
+
+        logger.info(f"[SESSION] Finalizing manual recording session ({len(all_samples)} samples, {duration:.2f}s).")
+
+        try:
+            mel_spec = extract_log_mel_spectrogram(
+                all_samples,
+                sample_rate=config.SAMPLE_RATE,
+                n_mels=config.N_MELS,
+                n_fft=config.N_FFT,
+                hop_length=config.HOP_LENGTH,
+                f_min=config.F_MIN,
+                f_max=config.F_MAX,
+                target_frames=config.TARGET_SPEC_FRAMES,
+            )
+
+            label, confidence, prob_dict = self.classifier.predict(mel_spec)
+            waveform_downsampled = self._downsample_waveform(all_samples, target_points=200)
+            spectrogram_ui = self._downsample_spectrogram(mel_spec, target_h=64, target_w=64)
+
+            timestamp_iso = datetime.now(timezone.utc).isoformat()
+            file_stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:19]
+            wav_filename = f"session_{file_stamp}.wav"
+            json_filename = f"session_{file_stamp}.json"
+
+            wav_path = config.EVENTS_DIR / wav_filename
+            json_path = config.EVENTS_DIR / json_filename
+
+            wavfile.write(str(wav_path), config.SAMPLE_RATE, all_samples)
+
+            peak_rms = compute_rms(all_samples)
+            sidecar_data = {
+                "timestamp": timestamp_iso,
+                "label": label,
+                "confidence": confidence,
+                "probs": prob_dict,
+                "duration_sec": round(duration, 3),
+                "peak_rms": round(peak_rms, 1),
+                "sample_rate": config.SAMPLE_RATE,
+                "num_samples": len(all_samples),
+                "wav_file": wav_filename,
+                "is_session": True,
+                "is_dummy_model": getattr(self.classifier, "is_dummy", False),
+            }
+            with open(json_path, "w") as f:
+                json.dump(sidecar_data, f, indent=2)
+
+            event_payload = {
+                "type": "prediction",
+                "is_session": True,
+                "label": label,
+                "confidence": round(confidence, 4),
+                "probs": prob_dict,
+                "timestamp": timestamp_iso,
+                "duration_sec": round(duration, 2),
+                "peak_rms": round(peak_rms, 1),
+                "wav_file": wav_filename,
+                "is_dummy_model": getattr(self.classifier, "is_dummy", False),
+                "waveform": waveform_downsampled,
+                "spectrogram": spectrogram_ui,
+            }
+
+            for cb in list(self.event_subscribers):
+                try:
+                    cb(event_payload)
+                except Exception as e:
+                    logger.error(f"Error notifying event subscriber: {e}")
+
+        except Exception as e:
+            logger.error(f"[SESSION ERROR] Error in manual session inference: {e}", exc_info=True)
 
     async def _process_vad_step(
         self,
