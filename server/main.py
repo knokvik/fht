@@ -47,6 +47,10 @@ audio_clients_lock = asyncio.Lock()
 
 def broadcast_to_ui_sync(message: Dict):
     """Bridge synchronous callback from pipeline thread to asyncio event loop."""
+    # Only forward manual session predictions to the dashboard; ignore background room noise
+    if message.get("type") == "prediction" and not message.get("is_session"):
+        return
+
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
@@ -266,8 +270,7 @@ async def websocket_ui_endpoint(websocket: WebSocket):
                     })
 
                 elif action == "stop_session":
-                    symptoms = data.get("symptoms", {})
-                    logger.info(f"[UI WS] User stopped recording. Symptoms: {symptoms}")
+                    logger.info("[UI WS] User stopped recording. Halting capture & opening clinical questionnaire...")
 
                     # 1. Stop LED on ESP32
                     control_msg = json.dumps({
@@ -281,20 +284,49 @@ async def websocket_ui_endpoint(websocket: WebSocket):
                             except Exception:
                                 pass
 
-                    # 2. Stop pipeline recording and trigger analysis
-                    stopped = pipeline.stop_manual_session(symptoms)
+                    # 2. Stop pipeline recording and cache audio
+                    res = pipeline.stop_manual_session()
 
-                    if stopped:
-                        # Broadcast analyzing state
+                    if res.get("success"):
                         await _broadcast_to_ui({
                             "type": "session_state",
-                            "state": "analyzing",
+                            "state": "questionnaire",
+                            "duration_sec": res.get("duration_sec", 0.0),
                         })
                     else:
                         await _broadcast_to_ui({
                             "type": "session_error",
-                            "message": "No recording session was active.",
+                            "message": "No active recording session found. Click 'Start Recording' first.",
                         })
+
+                elif action == "submit_assessment":
+                    symptoms = data.get("symptoms", {})
+                    logger.info(f"[UI WS] User submitted questionnaire. Running AI inference + Cause Engine with symptoms: {symptoms}")
+
+                    await _broadcast_to_ui({
+                        "type": "session_state",
+                        "state": "analyzing",
+                    })
+
+                    # Process the cached audio with the user's answers
+                    await pipeline.process_session_assessment(symptoms)
+
+                elif action == "cancel_session":
+                    logger.info("[UI WS] User cancelled session.")
+                    pipeline.manual_session_active = False
+                    pipeline.cached_session_samples = None
+                    # Stop LED
+                    control_msg = json.dumps({"type": "control", "command": "stop_recording"})
+                    async with audio_clients_lock:
+                        for ws_audio in list(audio_clients):
+                            try:
+                                await ws_audio.send_text(control_msg)
+                            except Exception:
+                                pass
+                    await _broadcast_to_ui({
+                        "type": "session_state",
+                        "state": "idle",
+                    })
 
                 elif action == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))

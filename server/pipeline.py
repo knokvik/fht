@@ -282,19 +282,149 @@ class AudioPipeline:
         # Seed with initial attack buffer from ring buffer
         pre_padding = int(config.SAMPLE_RATE * 0.1)
         self.manual_session_samples = [self.ring_buffer.get_latest(pre_padding)]
+        self.cached_session_samples = None
+        self.cached_session_duration = 0.0
         logger.info("[SESSION] Manual recording session started (open-ended, max 30s).")
 
-    def stop_manual_session(self, symptoms: dict = None):
-        """Stops the manual recording session and triggers finalization.
-        Returns True if a session was active and stopped."""
+    def stop_manual_session(self) -> dict:
+        """Stops recording and caches the audio buffer in memory, waiting for questionnaire."""
         if not self.manual_session_active:
+            if hasattr(self, "cached_session_samples") and self.cached_session_samples is not None and len(self.cached_session_samples) > 0:
+                return {"success": True, "duration_sec": self.cached_session_duration}
             logger.warning("[SESSION] stop_manual_session called but no session is active.")
-            return False
+            return {"success": False, "duration_sec": 0.0}
+
         self.manual_session_active = False
-        self.manual_session_duration = time.time() - self.manual_session_start_time
-        self._pending_symptoms = symptoms or {}
-        logger.info(f"[SESSION] Manual recording stopped after {self.manual_session_duration:.2f}s.")
-        return True
+        duration = max(0.4, time.time() - self.manual_session_start_time)
+        self.manual_session_duration = duration
+        if self.manual_session_samples:
+            self.cached_session_samples = np.concatenate(self.manual_session_samples)
+        else:
+            self.cached_session_samples = np.array([], dtype=np.int16)
+        self.cached_session_duration = duration
+        self.manual_session_samples = []
+        logger.info(f"[SESSION] Manual recording stopped and cached ({len(self.cached_session_samples)} samples, {duration:.2f}s). Awaiting questionnaire.")
+        return {"success": True, "duration_sec": round(duration, 2)}
+
+    async def process_session_assessment(self, symptoms: dict = None):
+        """Processes the cached audio with the user's questionnaire answers."""
+        if not hasattr(self, "cached_session_samples") or self.cached_session_samples is None or len(self.cached_session_samples) == 0:
+            logger.warning("[SESSION] process_session_assessment called but no cached audio exists.")
+            error_payload = {
+                "type": "session_error",
+                "message": "No recorded audio found. Please click 'Start Recording' and record your cough first.",
+            }
+            for cb in list(self.event_subscribers):
+                try:
+                    cb(error_payload)
+                except Exception:
+                    pass
+            return
+
+        all_samples = self.cached_session_samples
+        duration = self.cached_session_duration
+        self.cached_session_samples = None  # Clear cache after consuming
+        symptoms = symptoms or {}
+
+        logger.info(f"[SESSION] Processing assessment with symptoms ({len(all_samples)} samples, {duration:.2f}s): {symptoms}")
+
+        if len(all_samples) < config.SAMPLE_RATE * 0.3:
+            logger.warning("[SESSION] Recording too short (<0.3s). Discarding.")
+            error_payload = {
+                "type": "session_error",
+                "message": "Recording too short (under 0.5s). Please record a longer cough sample.",
+            }
+            for cb in list(self.event_subscribers):
+                try:
+                    cb(error_payload)
+                except Exception:
+                    pass
+            return
+
+        try:
+            mel_spec = extract_log_mel_spectrogram(
+                all_samples,
+                sample_rate=config.SAMPLE_RATE,
+                n_mels=config.N_MELS,
+                n_fft=config.N_FFT,
+                hop_length=config.HOP_LENGTH,
+                f_min=config.F_MIN,
+                f_max=config.F_MAX,
+                target_frames=config.TARGET_SPEC_FRAMES,
+            )
+
+            label, confidence, prob_dict = self.classifier.predict(mel_spec)
+            waveform_downsampled = self._downsample_waveform(all_samples, target_points=200)
+            spectrogram_ui = self._downsample_spectrogram(mel_spec, target_h=64, target_w=64)
+
+            # Compute audio descriptors (dry/wet, bout count, harshness)
+            descriptors = compute_audio_descriptors(all_samples, config.SAMPLE_RATE)
+            descriptors_dict = descriptors.to_dict()
+
+            # Run Cause Engine
+            causes = cause_engine.evaluate(prob_dict, descriptors, symptoms)
+
+            timestamp_iso = datetime.now(timezone.utc).isoformat()
+            file_stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:19]
+            wav_filename = f"session_{file_stamp}.wav"
+            json_filename = f"session_{file_stamp}.json"
+
+            wav_path = config.EVENTS_DIR / wav_filename
+            json_path = config.EVENTS_DIR / json_filename
+
+            wavfile.write(str(wav_path), config.SAMPLE_RATE, all_samples)
+
+            peak_rms = compute_rms(all_samples)
+            sidecar_data = {
+                "timestamp": timestamp_iso,
+                "label": label,
+                "confidence": confidence,
+                "probs": prob_dict,
+                "duration_sec": round(duration, 3),
+                "peak_rms": round(peak_rms, 1),
+                "sample_rate": config.SAMPLE_RATE,
+                "num_samples": len(all_samples),
+                "wav_file": wav_filename,
+                "is_session": True,
+                "is_dummy_model": getattr(self.classifier, "is_dummy", False),
+                "descriptors": descriptors_dict,
+                "symptoms": symptoms,
+                "causes": causes,
+            }
+            with open(json_path, "w") as f:
+                json.dump(sidecar_data, f, indent=2)
+
+            logger.info(
+                f"[PREDICTION] Label: {label.upper()} | Conf: {confidence * 100:.1f}% | "
+                f"Descriptors: {'Wet' if descriptors.is_wet else 'Dry'}, {descriptors.bout_count} bout(s) | "
+                f"Top Cause: {causes[0]['name'] if causes else 'N/A'}"
+            )
+
+            event_payload = {
+                "type": "prediction",
+                "is_session": True,
+                "label": label,
+                "confidence": round(confidence, 4),
+                "probs": prob_dict,
+                "timestamp": timestamp_iso,
+                "duration_sec": round(duration, 2),
+                "peak_rms": round(peak_rms, 1),
+                "wav_file": wav_filename,
+                "is_dummy_model": getattr(self.classifier, "is_dummy", False),
+                "waveform": waveform_downsampled,
+                "spectrogram": spectrogram_ui,
+                "descriptors": descriptors_dict,
+                "causes": causes,
+            }
+
+            for cb in list(self.event_subscribers):
+                try:
+                    cb(event_payload)
+                except Exception as e:
+                    logger.error(f"Error notifying event subscriber: {e}")
+
+        except Exception as e:
+            logger.error(f"[SESSION ERROR] Error in session assessment: {e}", exc_info=True)
 
     async def _analysis_loop(self):
         """Processes 100ms audio windows periodically."""
@@ -308,34 +438,19 @@ class AudioPipeline:
             frame_samples = self.ring_buffer.get_latest(samples_per_frame)
             frame_rms = compute_rms(frame_samples)
 
-            # Update noise floor history when not actively inside an event
+            # Update noise floor history
             if not self.in_event:
                 self.rms_history.append(frame_rms)
 
             noise_floor, threshold = self._compute_adaptive_threshold()
 
-            # Handle Manual Session
+            # Handle Manual Session accumulation
             if self.manual_session_active:
                 self.manual_session_samples.append(frame_samples)
                 # Safety guard: auto-stop after 30s
                 if now >= self.manual_session_end_time:
                     logger.warning("[SESSION] Safety guard: auto-stopping after 30s.")
-                    self.manual_session_active = False
-                    self.manual_session_duration = now - self.manual_session_start_time
-                    self._pending_symptoms = {}
-                    self._pending_finalize = True
-
-            if not self.manual_session_active and not self._pending_finalize:
-                # Background ambient VAD tracking
-                is_above_threshold = frame_rms >= threshold
-                await self._process_vad_step(frame_samples, frame_rms, is_above_threshold, noise_floor, threshold)
-
-            # Check if finalization was requested (by stop_manual_session or safety guard)
-            if self._pending_finalize or (not self.manual_session_active and len(self.manual_session_samples) > 1):
-                # Only finalize if we actually have samples to process
-                if len(self.manual_session_samples) > 1:
-                    self._pending_finalize = False
-                    await self._finalize_manual_session()
+                    self.stop_manual_session()
 
             # Broadcast lightweight level telemetry
             level_msg = {

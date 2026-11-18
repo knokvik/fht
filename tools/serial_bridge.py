@@ -128,7 +128,7 @@ async def stream_serial_to_ws(serial_port: str, baud_rate: int, ws_url: str):
                         logger.info("Waiting 5s before retry...")
                         await asyncio.sleep(5)
 
-        except websockets.exceptions.ConnectionRefused:
+        except (ConnectionRefusedError, OSError):
             logger.warning(f"Server not available at {ws_url}. Retrying in 3s...")
         except Exception as e:
             logger.error(f"Connection error: {e}")
