@@ -241,14 +241,13 @@ async def websocket_ui_endpoint(websocket: WebSocket):
                 action = data.get("action")
 
                 if action == "start_session":
-                    duration = float(data.get("duration", 3.0))
-                    logger.info(f"[UI WS] User triggered screening session ({duration}s). Commanding ESP32 blue LED...")
+                    logger.info("[UI WS] User triggered recording session (open-ended). Commanding ESP32 blue LED...")
 
                     # 1. Trigger hardware LED on ESP32 via audio clients
                     control_msg = json.dumps({
                         "type": "control",
                         "command": "start_recording",
-                        "duration": duration,
+                        "duration": 30.0,
                     })
                     async with audio_clients_lock:
                         for ws_audio in list(audio_clients):
@@ -257,15 +256,45 @@ async def websocket_ui_endpoint(websocket: WebSocket):
                             except Exception:
                                 pass
 
-                    # 2. Start audio accumulation session in pipeline
-                    pipeline.start_manual_session(duration_sec=duration)
+                    # 2. Start open-ended audio accumulation session in pipeline
+                    pipeline.start_manual_session()
 
                     # 3. Broadcast session status to UI clients
                     await _broadcast_to_ui({
                         "type": "session_state",
                         "state": "recording",
-                        "duration": duration,
                     })
+
+                elif action == "stop_session":
+                    symptoms = data.get("symptoms", {})
+                    logger.info(f"[UI WS] User stopped recording. Symptoms: {symptoms}")
+
+                    # 1. Stop LED on ESP32
+                    control_msg = json.dumps({
+                        "type": "control",
+                        "command": "stop_recording",
+                    })
+                    async with audio_clients_lock:
+                        for ws_audio in list(audio_clients):
+                            try:
+                                await ws_audio.send_text(control_msg)
+                            except Exception:
+                                pass
+
+                    # 2. Stop pipeline recording and trigger analysis
+                    stopped = pipeline.stop_manual_session(symptoms)
+
+                    if stopped:
+                        # Broadcast analyzing state
+                        await _broadcast_to_ui({
+                            "type": "session_state",
+                            "state": "analyzing",
+                        })
+                    else:
+                        await _broadcast_to_ui({
+                            "type": "session_error",
+                            "message": "No recording session was active.",
+                        })
 
                 elif action == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))

@@ -14,29 +14,18 @@
       --text-primary: #f3f4f6;
       --text-secondary: #9ca3af;
       --text-muted: #6b7280;
-      
       --color-healthy: #10b981;
       --color-healthy-bg: rgba(16, 185, 129, 0.15);
       --color-suspect: #ef4444;
       --color-suspect-bg: rgba(239, 68, 68, 0.18);
       --color-nocough: #f59e0b;
       --color-nocough-bg: rgba(245, 158, 11, 0.15);
-      
       --color-cyan: #06b6d4;
-      --color-cyan-glow: rgba(6, 182, 212, 0.35);
       --color-blue: #3b82f6;
-      --color-blue-glow: rgba(59, 130, 246, 0.6);
-      
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: var(--bg-base);
       color: var(--text-primary);
@@ -47,17 +36,9 @@
       padding: 16px;
       line-height: 1.5;
     }
+    .container { max-width: 1280px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
-    .container {
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Disclaimer Banner */
+    /* Disclaimer */
     .disclaimer-banner {
       background: linear-gradient(90deg, #78350f, #92400e);
       border: 1px solid #d97706;
@@ -68,550 +49,199 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-    .disclaimer-banner strong {
-      color: #fff;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
+    .disclaimer-banner strong { color: #fff; font-weight: 700; letter-spacing: 0.5px; }
 
     /* Header */
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      background-color: var(--bg-surface);
-      padding: 14px 20px;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      background-color: var(--bg-surface); padding: 14px 20px; border-radius: 10px; border: 1px solid var(--border-color);
     }
-    .header-title h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .header-title p {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
-    .header-status {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 0.85rem;
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 5px 12px;
-      border-radius: 9999px;
-      background: #1e293b;
-      border: 1px solid var(--border-color);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-    }
-    .status-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background-color: #ef4444;
-      display: inline-block;
-      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
-      transition: background-color 0.3s, box-shadow 0.3s;
-    }
-    .status-dot.connected {
-      background-color: #10b981;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
-      animation: pulse-dot 2s infinite ease-in-out;
-    }
-    .status-dot.connecting {
-      background-color: #f59e0b;
-      box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
-    }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.65; transform: scale(1.15); }
-    }
+    .header-title h1 { font-size: 1.3rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .header-title p { font-size: 0.8rem; color: var(--text-secondary); }
+    .header-status { display: flex; align-items: center; gap: 16px; font-size: 0.85rem; }
+    .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 9999px; background: #1e293b; border: 1px solid var(--border-color); font-family: var(--font-mono); font-size: 0.75rem; }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background-color: #ef4444; display: inline-block; transition: all 0.3s; }
+    .status-dot.connected { background-color: #10b981; box-shadow: 0 0 10px rgba(16,185,129,0.8); animation: pulse-dot 2s infinite; }
+    .status-dot.connecting { background-color: #f59e0b; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.65;transform:scale(1.15)} }
+    .model-tag { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .model-tag.dummy { background-color: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid #b45309; }
+    .model-tag.trained { background-color: rgba(16,185,129,0.2); color: #34d399; border: 1px solid #059669; }
 
-    .model-tag {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .model-tag.dummy {
-      background-color: rgba(245, 158, 11, 0.2);
-      color: #fbbf24;
-      border: 1px solid #b45309;
-    }
-    .model-tag.trained {
-      background-color: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      border: 1px solid #059669;
-    }
-
-    /* ACTION TRIGGER CARD (Recording Session) */
+    /* Recording Control Card */
     .trigger-card {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      border: 2px solid #3b82f6;
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-      position: relative;
-      overflow: hidden;
-    }
-    .trigger-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
-      pointer-events: none;
+      border: 2px solid #3b82f6; border-radius: 12px; padding: 20px;
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
+      position: relative; overflow: hidden;
     }
     .trigger-btn {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: #fff;
-      border: none;
-      padding: 14px 32px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      border-radius: 9999px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      user-select: none;
-      z-index: 1;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none;
+      padding: 14px 36px; font-size: 1.15rem; font-weight: 700; border-radius: 9999px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 12px;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.4); transition: all 0.2s; user-select: none; z-index: 1;
     }
-    .trigger-btn:hover {
-      background: linear-gradient(135deg, #3b82f6, #2563eb);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 22px rgba(59, 130, 246, 0.6);
-    }
-    .trigger-btn:active {
-      transform: translateY(1px);
-    }
+    .trigger-btn:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); transform: translateY(-2px); }
+    .trigger-btn:active { transform: translateY(1px); }
     .trigger-btn.recording {
       background: linear-gradient(135deg, #dc2626, #b91c1c);
-      box-shadow: 0 0 25px rgba(220, 38, 38, 0.8);
+      box-shadow: 0 0 25px rgba(220,38,38,0.8);
       animation: record-pulse 0.7s infinite alternate;
     }
-    @keyframes record-pulse {
-      0% { transform: scale(1); box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
-      100% { transform: scale(1.03); box-shadow: 0 0 30px rgba(220, 38, 38, 0.9); }
+    @keyframes record-pulse { 0%{transform:scale(1);box-shadow:0 0 15px rgba(220,38,38,0.5)}100%{transform:scale(1.03);box-shadow:0 0 30px rgba(220,38,38,0.9)} }
+    .trigger-btn.analyzing {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      box-shadow: 0 0 20px rgba(124,58,237,0.6);
+      cursor: wait;
     }
 
-    .led-hardware-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-      font-family: var(--font-mono);
-      color: var(--text-secondary);
-      z-index: 1;
-    }
-    .blue-led-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background-color: #1e3a8a;
-      border: 1px solid #3b82f6;
-      transition: all 0.1s ease;
-    }
-    .blue-led-dot.blinking {
-      background-color: #60a5fa;
-      box-shadow: 0 0 16px #3b82f6, 0 0 30px #60a5fa;
-      animation: blue-fast-blink 0.14s infinite alternate;
-    }
-    @keyframes blue-fast-blink {
-      0% { opacity: 0.2; transform: scale(0.9); }
-      100% { opacity: 1; transform: scale(1.25); }
-    }
+    .led-hardware-indicator { display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-family: var(--font-mono); color: var(--text-secondary); z-index: 1; }
+    .blue-led-dot { width: 12px; height: 12px; border-radius: 50%; background-color: #1e3a8a; border: 1px solid #3b82f6; transition: all 0.1s; }
+    .blue-led-dot.blinking { background-color: #60a5fa; box-shadow: 0 0 16px #3b82f6, 0 0 30px #60a5fa; animation: blue-fast-blink 0.14s infinite alternate; }
+    @keyframes blue-fast-blink { 0%{opacity:0.2;transform:scale(0.9)}100%{opacity:1;transform:scale(1.25)} }
+    .recording-timer { font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #f87171; letter-spacing: 1px; z-index: 1; }
 
-    .countdown-bar-container {
-      width: 100%;
-      max-width: 480px;
-      height: 6px;
-      background: #334155;
-      border-radius: 3px;
-      overflow: hidden;
-      display: none;
-      z-index: 1;
+    /* Symptom Quiz Panel */
+    .symptom-panel {
+      background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px;
     }
-    .countdown-bar-fill {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, #3b82f6, #60a5fa);
-      transition: width 0.1s linear;
+    .symptom-panel h3 { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .symptom-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .symptom-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 9999px; font-size: 0.82rem; font-weight: 500;
+      background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-secondary);
+      cursor: pointer; transition: all 0.2s; user-select: none;
     }
+    .symptom-chip:hover { background: var(--bg-card-hover); border-color: #60a5fa; color: var(--text-primary); }
+    .symptom-chip.active { background: rgba(59,130,246,0.2); border-color: #3b82f6; color: #93c5fd; font-weight: 600; }
+    .symptom-chip .chip-icon { font-size: 1rem; }
+    .symptom-select {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+      border-radius: 9999px; font-size: 0.78rem; font-weight: 500;
+      background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-secondary);
+    }
+    .symptom-select select {
+      background: transparent; border: none; color: var(--text-primary); font-size: 0.78rem;
+      font-family: var(--font-sans); outline: none; cursor: pointer;
+    }
+    .symptom-select select option { background: var(--bg-card); color: var(--text-primary); }
+    .preset-btns { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .preset-btn {
+      padding: 4px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+      background: #1e293b; border: 1px solid #334155; color: #94a3b8;
+      cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .preset-btn:hover { background: #334155; color: #e2e8f0; border-color: #475569; }
 
     /* Grid Layout */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 16px;
-    }
-    @media (max-width: 900px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    .dashboard-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 16px; }
+    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-    /* Card Panels */
-    .card {
-      background-color: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-      padding-bottom: 8px;
-    }
-    .card-title .badge {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-weight: 400;
-    }
+    /* Cards */
+    .card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; }
+    .card-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 0.9rem; }
+    .badge { font-size: 0.72rem; font-weight: 500; color: var(--text-muted); font-family: var(--font-mono); }
 
-    /* Live Waveform Canvas */
-    .canvas-container {
-      position: relative;
-      background-color: #0b111e;
-      border-radius: 6px;
-      border: 1px solid #1f2937;
-      overflow: hidden;
-      height: 140px;
-      width: 100%;
-    }
-    canvas#oscilloscope {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    .vad-indicator {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      font-size: 0.7rem;
-      font-family: var(--font-mono);
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid #374151;
-      color: var(--text-muted);
-      transition: all 0.2s ease;
-    }
-    .vad-indicator.active {
-      background: rgba(239, 68, 68, 0.8);
-      color: #fff;
-      border-color: #f87171;
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
-    }
-    .vad-indicator.session {
-      background: rgba(59, 130, 246, 0.85);
-      color: #fff;
-      border-color: #60a5fa;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.85);
-    }
+    /* Oscilloscope */
+    .canvas-container { position: relative; width: 100%; height: 100px; border-radius: 6px; overflow: hidden; background-color: #050811; border: 1px solid #1e293b; }
+    canvas#oscilloscope { width: 100%; height: 100%; display: block; }
+    .vad-indicator { position: absolute; top: 8px; right: 8px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 4px; background: rgba(6,182,212,0.15); color: #06b6d4; border: 1px solid rgba(6,182,212,0.3); }
+    .vad-indicator.session { background: rgba(239,68,68,0.2); color: #f87171; border-color: rgba(239,68,68,0.5); animation: vad-pulse 0.5s infinite alternate; }
+    @keyframes vad-pulse { 0%{opacity:0.6}100%{opacity:1} }
 
-    /* Audio Metrics Strip */
-    .audio-stats-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-    }
-    .stat-box {
-      background-color: var(--bg-card);
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .stat-box .label {
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .stat-box .val {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #38bdf8;
-      margin-top: 2px;
-    }
+    /* Audio Stats */
+    .audio-stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-family: var(--font-mono); font-size: 0.78rem; }
+    .stat-box { background-color: var(--bg-card); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
+    .stat-box .label { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-box .val { font-size: 1.05rem; font-weight: 700; color: #38bdf8; margin-top: 2px; }
 
-    /* Level Meter Bar */
-    .meter-container {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-top: 4px;
-    }
-    .meter-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-    .meter-track {
-      height: 8px;
-      background-color: #1f2937;
-      border-radius: 4px;
-      overflow: hidden;
-      position: relative;
-    }
-    .meter-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #10b981 0%, #38bdf8 60%, #f59e0b 85%, #ef4444 100%);
-      transition: width 0.08s linear;
-      border-radius: 4px;
-    }
+    /* Level Meter */
+    .meter-container { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+    .meter-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .meter-track { height: 8px; background-color: #1f2937; border-radius: 4px; overflow: hidden; }
+    .meter-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #10b981 0%, #38bdf8 60%, #f59e0b 85%, #ef4444 100%); transition: width 0.08s linear; border-radius: 4px; }
 
-    /* Big Prediction Card */
+    /* Prediction Card */
     .prediction-display {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-      border-radius: 8px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      transition: all 0.3s ease;
-      text-align: center;
-      min-height: 140px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px 16px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color);
+      transition: all 0.3s; text-align: center; min-height: 120px;
     }
-    .prediction-display.healthy {
-      background: var(--color-healthy-bg);
-      border-color: var(--color-healthy);
-    }
-    .prediction-display.cough_suspect {
-      background: var(--color-suspect-bg);
-      border-color: var(--color-suspect);
-    }
-    .prediction-display.no_cough {
-      background: var(--color-nocough-bg);
-      border-color: var(--color-nocough);
-    }
-
-    .pred-pill {
-      display: inline-block;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-    .pred-label {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #94a3b8;
-      margin-bottom: 2px;
-      transition: color 0.3s;
-    }
+    .prediction-display.healthy { background: var(--color-healthy-bg); border-color: var(--color-healthy); }
+    .prediction-display.cough_suspect { background: var(--color-suspect-bg); border-color: var(--color-suspect); }
+    .prediction-display.no_cough { background: var(--color-nocough-bg); border-color: var(--color-nocough); }
+    .pred-pill { display: inline-block; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 4px; }
+    .pred-label { font-size: 2rem; font-weight: 800; color: #94a3b8; margin-bottom: 2px; transition: color 0.3s; }
     .pred-label.healthy { color: #34d399; }
     .pred-label.cough_suspect { color: #f87171; }
     .pred-label.no_cough { color: #fbbf24; }
+    .pred-conf { font-size: 1.15rem; font-weight: 600; font-family: var(--font-mono); color: var(--text-secondary); }
 
-    .pred-conf {
-      font-size: 1.15rem;
-      font-weight: 600;
-      font-family: var(--font-mono);
-      color: var(--text-secondary);
-    }
-
-    /* Class Probability Bars */
-    .prob-bars-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 6px;
-    }
-    .prob-bar-group {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .prob-bar-header {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-    }
-    .prob-bar-header .val {
-      font-family: var(--font-mono);
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-    .prob-track {
-      height: 10px;
-      background-color: #1f2937;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    .prob-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 5px;
-      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    /* Probability Bars */
+    .prob-bars-container { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .prob-bar-group { display: flex; flex-direction: column; gap: 3px; }
+    .prob-bar-header { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-secondary); }
+    .prob-bar-header .val { font-family: var(--font-mono); font-weight: 600; color: var(--text-primary); }
+    .prob-track { height: 10px; background-color: #1f2937; border-radius: 5px; overflow: hidden; }
+    .prob-fill { height: 100%; width: 0%; border-radius: 5px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
     .prob-fill.healthy { background-color: var(--color-healthy); }
     .prob-fill.suspect { background-color: var(--color-suspect); }
     .prob-fill.nocough { background-color: var(--color-nocough); }
 
-    /* Spectrogram Section */
-    .spectrogram-section {
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      overflow: hidden;
-      background-color: var(--bg-card);
-    }
-    .spectrogram-header {
-      padding: 10px 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #1e293b;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    .spectrogram-body {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-      position: relative;
-    }
-    canvas#spectrogramCanvas {
-      width: 100%;
-      max-width: 520px;
-      height: 140px;
-      background-color: #050811;
-      border-radius: 4px;
-      border: 1px solid #374151;
-      image-rendering: pixelated;
-    }
-    .spec-placeholder {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      font-family: var(--font-mono);
-      pointer-events: none;
-      text-align: center;
-    }
-    .spec-legend {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      max-width: 520px;
-      font-size: 0.7rem;
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-    }
+    /* Descriptors Strip */
+    .descriptors-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+    .desc-box { background: var(--bg-card); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center; }
+    .desc-box .desc-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .desc-box .desc-val { font-size: 0.85rem; font-weight: 700; font-family: var(--font-mono); color: #38bdf8; margin-top: 2px; }
 
-    /* Event Log Table */
-    .event-log-container {
-      max-height: 220px;
-      overflow-y: auto;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background-color: #0f172a;
-    }
-    table.event-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.78rem;
-      font-family: var(--font-mono);
-      text-align: left;
-    }
-    table.event-table th {
-      background-color: #1e293b;
-      color: var(--text-secondary);
-      font-weight: 600;
-      padding: 8px 12px;
-      position: sticky;
-      top: 0;
-      border-bottom: 1px solid var(--border-color);
-      z-index: 2;
-    }
-    table.event-table td {
-      padding: 7px 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      color: var(--text-primary);
-    }
-    .badge-pill {
-      display: inline-block;
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .badge-pill.healthy {
-      background: var(--color-healthy-bg);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }
-    .badge-pill.cough_suspect {
-      background: var(--color-suspect-bg);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.4);
-    }
-    .badge-pill.no_cough {
-      background: var(--color-nocough-bg);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.4);
-    }
+    /* Spectrogram */
+    .spectrogram-section { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background-color: var(--bg-card); }
+    .spectrogram-header { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; background-color: #1e293b; font-size: 0.85rem; font-weight: 600; }
+    .spectrogram-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; align-items: center; position: relative; }
+    canvas#spectrogramCanvas { width: 100%; max-width: 520px; height: 140px; background-color: #050811; border-radius: 4px; border: 1px solid #374151; image-rendering: pixelated; }
+    .spec-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: var(--text-muted); font-size: 0.82rem; font-family: var(--font-mono); pointer-events: none; text-align: center; }
+    .spec-legend { display: flex; justify-content: space-between; width: 100%; max-width: 520px; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-muted); }
 
-    footer {
-      margin-top: 8px;
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    /* Cause Engine Panel */
+    .cause-panel { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; }
+    .cause-panel-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .cause-card {
+      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-bottom: 10px;
+      display: flex; flex-direction: column; gap: 6px; transition: border-color 0.3s;
     }
+    .cause-card:first-child { border-color: #3b82f6; }
+    .cause-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .cause-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+    .cause-subtext { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
+    .cause-pct { font-size: 1.3rem; font-weight: 800; font-family: var(--font-mono); min-width: 60px; text-align: right; }
+    .cause-pct.high { color: #f87171; }
+    .cause-pct.moderate { color: #fbbf24; }
+    .cause-pct.low { color: #94a3b8; }
+    .severity-badge { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .severity-badge.high { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .severity-badge.moderate { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .severity-badge.low { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+    .cause-evidence { list-style: none; padding: 0; margin: 4px 0 0 0; }
+    .cause-evidence li { font-size: 0.75rem; color: var(--text-secondary); padding: 2px 0; display: flex; align-items: center; gap: 6px; }
+    .cause-evidence li::before { content: '→'; color: #60a5fa; font-weight: 700; }
+    .cause-placeholder { color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 24px; font-family: var(--font-mono); }
+
+    /* Event Log */
+    .event-log-container { max-height: 180px; overflow-y: auto; border-radius: 6px; border: 1px solid var(--border-color); background-color: #0f172a; }
+    table.event-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; font-family: var(--font-mono); text-align: left; }
+    table.event-table th { background-color: #1e293b; color: var(--text-secondary); font-weight: 600; padding: 8px 12px; position: sticky; top: 0; border-bottom: 1px solid var(--border-color); z-index: 2; }
+    table.event-table td { padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); }
+    .badge-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .badge-pill.healthy { background: var(--color-healthy-bg); color: #34d399; border: 1px solid rgba(16,185,129,0.4); }
+    .badge-pill.cough_suspect { background: var(--color-suspect-bg); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+    .badge-pill.no_cough { background: var(--color-nocough-bg); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); }
+
+    footer { margin-top: 8px; text-align: center; font-size: 0.75rem; color: var(--text-muted); }
   </style>
 </head>
 <body>
-
 <div class="container">
 
   <!-- Medical Disclaimer Banner -->
@@ -634,9 +264,8 @@
         </svg>
         Cough Prescreening Pipeline
       </h1>
-      <p>ESP32 (INMP441) → Audio Stream → PyTorch CNN Inference → Live Dashboard</p>
+      <p>ESP32 (INMP441) → Audio Stream → PyTorch CNN + Cause Engine → Live Dashboard</p>
     </div>
-
     <div class="header-status">
       <div id="modelTag" class="model-tag dummy">Initializing</div>
       <div class="status-badge">
@@ -646,42 +275,82 @@
     </div>
   </header>
 
-  <!-- INTERACTIVE RECORDING CONTROL CARD -->
+  <!-- INTERACTIVE RECORDING CONTROL -->
   <div class="trigger-card">
     <button id="recordTriggerBtn" class="trigger-btn">
       <span style="font-size: 1.3rem;">🔴</span>
-      <span id="triggerBtnText">START PRESCREENING (3s RECORD)</span>
+      <span id="triggerBtnText">START RECORDING</span>
     </button>
-    
+    <div id="recordingTimerDisplay" class="recording-timer" style="display:none;">0:00</div>
     <div class="led-hardware-indicator">
       <span id="hardwareLedDot" class="blue-led-dot"></span>
-      <span id="hardwareLedStatus">ESP32 Blue LED: Standby (Click above to record)</span>
+      <span id="hardwareLedStatus">ESP32 Blue LED: Standby</span>
     </div>
+  </div>
 
-    <div id="countdownBarContainer" class="countdown-bar-container">
-      <div id="countdownBarFill" class="countdown-bar-fill"></div>
+  <!-- Symptom Quiz Panel -->
+  <div class="symptom-panel">
+    <h3>🩺 Patient Symptom Quiz <span style="font-size:0.72rem; color: var(--text-muted); font-weight:400;">(Improves cause ranking accuracy — toggle before stopping)</span></h3>
+    <div class="symptom-chips">
+      <div class="symptom-chip" data-symptom="fever" onclick="toggleChip(this)">
+        <span class="chip-icon">🌡️</span> Fever
+      </div>
+      <div class="symptom-chip" data-symptom="wheezing" onclick="toggleChip(this)">
+        <span class="chip-icon">🫁</span> Wheezing / Tight Breathing
+      </div>
+      <div class="symptom-chip" data-symptom="worse_at_night" onclick="toggleChip(this)">
+        <span class="chip-icon">🌙</span> Worse at Night
+      </div>
+      <div class="symptom-chip" data-symptom="smoker" onclick="toggleChip(this)">
+        <span class="chip-icon">🚬</span> Smoker / Vaper
+      </div>
+      <div class="symptom-chip" data-symptom="heartburn" onclick="toggleChip(this)">
+        <span class="chip-icon">🔥</span> Heartburn / Acidity
+      </div>
+      <div class="symptom-chip" data-symptom="allergy" onclick="toggleChip(this)">
+        <span class="chip-icon">🤧</span> Seasonal Allergy
+      </div>
+      <div class="symptom-select">
+        <span>⏱️</span>
+        <select id="durationSelect" data-symptom="duration">
+          <option value="recent">Onset: Recent (< 7 days)</option>
+          <option value="moderate">Onset: 1–3 weeks</option>
+          <option value="chronic">Onset: > 3 weeks (chronic)</option>
+        </select>
+      </div>
+      <div class="symptom-select">
+        <span>💧</span>
+        <select id="phlegmSelect" data-symptom="phlegm">
+          <option value="none_clear">Phlegm: None / Clear</option>
+          <option value="white">Phlegm: White / Foamy</option>
+          <option value="yellow_green">Phlegm: Yellow / Green</option>
+        </select>
+      </div>
+    </div>
+    <div class="preset-btns">
+      <button class="preset-btn" onclick="applyPreset('clear')">🗑️ Clear All</button>
+      <button class="preset-btn" onclick="applyPreset('cold')">🤒 Cold/Flu</button>
+      <button class="preset-btn" onclick="applyPreset('asthma')">💨 Asthma</button>
+      <button class="preset-btn" onclick="applyPreset('reflux')">🔥 Acid Reflux</button>
     </div>
   </div>
 
   <!-- Main Grid -->
   <div class="dashboard-grid">
 
-    <!-- LEFT COLUMN: Live Audio & Telemetry -->
+    <!-- LEFT COLUMN -->
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      
-      <!-- Live Oscilloscope Card -->
+
+      <!-- Live Oscilloscope -->
       <div class="card">
         <div class="card-title">
           <span>Live Audio Oscilloscope</span>
           <span class="badge">16 kHz • 16-bit Mono</span>
         </div>
-
         <div class="canvas-container">
           <canvas id="oscilloscope"></canvas>
           <div id="vadBadge" class="vad-indicator">LISTENING</div>
         </div>
-
-        <!-- Level Meter -->
         <div class="meter-container">
           <div class="meter-labels">
             <span>Live Microphone RMS Level</span>
@@ -691,35 +360,22 @@
             <div id="meterFill" class="meter-fill"></div>
           </div>
         </div>
-
-        <!-- Audio Metrics Strip -->
         <div class="audio-stats-strip">
-          <div class="stat-box">
-            <div class="label">Current RMS</div>
-            <div id="statRms" class="val">0.0</div>
-          </div>
-          <div class="stat-box">
-            <div class="label">Noise Floor</div>
-            <div id="statFloor" class="val">0.0</div>
-          </div>
-          <div class="stat-box">
-            <div class="label">VAD Threshold</div>
-            <div id="statThreshold" class="val">0.0</div>
-          </div>
+          <div class="stat-box"><div class="label">Current RMS</div><div id="statRms" class="val">0.0</div></div>
+          <div class="stat-box"><div class="label">Noise Floor</div><div id="statFloor" class="val">0.0</div></div>
+          <div class="stat-box"><div class="label">VAD Threshold</div><div id="statThreshold" class="val">0.0</div></div>
         </div>
       </div>
 
-      <!-- Spectrogram Heatmap Card (Revealed on Session) -->
+      <!-- Spectrogram Heatmap -->
       <div class="spectrogram-section">
         <div class="spectrogram-header">
-          <span>Live Mel-Spectrogram Heatmap</span>
+          <span>Mel-Spectrogram Heatmap</span>
           <span id="specStatusBadge" class="badge">Awaiting recording session</span>
         </div>
         <div class="spectrogram-body">
           <canvas id="spectrogramCanvas" width="256" height="128"></canvas>
-          <div id="specPlaceholder" class="spec-placeholder">
-            Click "START PRESCREENING" above to record cough and view heatmap
-          </div>
+          <div id="specPlaceholder" class="spec-placeholder">Record a cough and click Stop to view spectrogram</div>
           <div class="spec-legend">
             <span>50 Hz</span>
             <span>64 Mel Filterbanks (dB Scale)</span>
@@ -728,9 +384,16 @@
         </div>
       </div>
 
+      <!-- Ranked Possible Causes Panel -->
+      <div class="cause-panel">
+        <div class="cause-panel-title">🔬 Ranked Possible Causes <span class="badge">(Multimodal: Audio + Symptoms)</span></div>
+        <div id="causeCardsContainer">
+          <div class="cause-placeholder">Complete a recording session to see ranked cause analysis</div>
+        </div>
+      </div>
     </div>
 
-    <!-- RIGHT COLUMN: Predictions & Event Log -->
+    <!-- RIGHT COLUMN -->
     <div style="display: flex; flex-direction: column; gap: 16px;">
 
       <!-- Primary Prediction Card -->
@@ -739,143 +402,149 @@
           <span>Prescreening Result</span>
           <span id="lastEventTime" class="badge">Ready</span>
         </div>
-
         <div id="predictionDisplay" class="prediction-display">
           <span class="pred-pill">CLASSIFICATION RESULT</span>
           <div id="predLabel" class="pred-label">READY</div>
-          <div id="predConf" class="pred-conf">Click "START PRESCREENING" to begin</div>
+          <div id="predConf" class="pred-conf">Click START RECORDING to begin</div>
         </div>
-
-        <!-- Probability Distribution Bars -->
         <div class="prob-bars-container">
-          
           <div class="prob-bar-group">
-            <div class="prob-bar-header">
-              <span>Healthy Cough</span>
-              <span id="probHealthyText" class="val">0.0%</span>
-            </div>
-            <div class="prob-track">
-              <div id="probHealthyFill" class="prob-fill healthy"></div>
-            </div>
+            <div class="prob-bar-header"><span>Healthy Cough</span><span id="probHealthyText" class="val">0.0%</span></div>
+            <div class="prob-track"><div id="probHealthyFill" class="prob-fill healthy"></div></div>
           </div>
-
           <div class="prob-bar-group">
-            <div class="prob-bar-header">
-              <span>Cough Suspect (COVID-19 Risk)</span>
-              <span id="probSuspectText" class="val">0.0%</span>
-            </div>
-            <div class="prob-track">
-              <div id="probSuspectFill" class="prob-fill suspect"></div>
-            </div>
+            <div class="prob-bar-header"><span>Cough Suspect (COVID-19 Risk)</span><span id="probSuspectText" class="val">0.0%</span></div>
+            <div class="prob-track"><div id="probSuspectFill" class="prob-fill suspect"></div></div>
           </div>
-
           <div class="prob-bar-group">
-            <div class="prob-bar-header">
-              <span>No Cough / Speech / Noise</span>
-              <span id="probNoCoughText" class="val">0.0%</span>
-            </div>
-            <div class="prob-track">
-              <div id="probNoCoughFill" class="prob-fill nocough"></div>
-            </div>
+            <div class="prob-bar-header"><span>No Cough / Speech / Noise</span><span id="probNoCoughText" class="val">0.0%</span></div>
+            <div class="prob-track"><div id="probNoCoughFill" class="prob-fill nocough"></div></div>
           </div>
-
         </div>
       </div>
 
-      <!-- Event History Log Card -->
+      <!-- Audio Descriptors Card -->
+      <div class="card">
+        <div class="card-title"><span>Audio Descriptors</span><span class="badge">DSP Analysis</span></div>
+        <div class="descriptors-strip" id="descriptorsStrip">
+          <div class="desc-box"><div class="desc-label">Type</div><div class="desc-val" id="descType">—</div></div>
+          <div class="desc-box"><div class="desc-label">Bout Count</div><div class="desc-val" id="descBouts">—</div></div>
+          <div class="desc-box"><div class="desc-label">Harshness</div><div class="desc-val" id="descHarsh">—</div></div>
+          <div class="desc-box"><div class="desc-label">Duration</div><div class="desc-val" id="descDur">—</div></div>
+        </div>
+      </div>
+
+      <!-- Event Log -->
       <div class="card" style="flex: 1;">
         <div class="card-title">
           <span>Prescreening Event History</span>
           <span id="eventCountBadge" class="badge">0 events</span>
         </div>
-
         <div class="event-log-container">
           <table class="event-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Classification</th>
-                <th>Confidence</th>
-                <th>Duration</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Time</th><th>Classification</th><th>Confidence</th><th>Duration</th></tr></thead>
             <tbody id="eventLogBody">
-              <tr>
-                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                  No sessions completed yet. Click Start Prescreening above.
-                </td>
-              </tr>
+              <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 24px;">No sessions completed yet.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
 
   </div>
 
   <footer>
-    FHT Engineering Demo • ESP32 (INMP441) + PyTorch CNN + Live Web Dashboard
+    FHT Engineering Demo • ESP32 (INMP441) + PyTorch CNN + Cause Engine + Live Web Dashboard
   </footer>
 
 </div>
 
-<!-- Self-Contained JavaScript -->
 <script>
 (() => {
-  // DOM Elements
+  // DOM References
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const modelTag = document.getElementById('modelTag');
-  
   const recordTriggerBtn = document.getElementById('recordTriggerBtn');
   const triggerBtnText = document.getElementById('triggerBtnText');
   const hardwareLedDot = document.getElementById('hardwareLedDot');
   const hardwareLedStatus = document.getElementById('hardwareLedStatus');
-  const countdownBarContainer = document.getElementById('countdownBarContainer');
-  const countdownBarFill = document.getElementById('countdownBarFill');
-
+  const recordingTimerDisplay = document.getElementById('recordingTimerDisplay');
   const oscCanvas = document.getElementById('oscilloscope');
   const oscCtx = oscCanvas.getContext('2d');
   const vadBadge = document.getElementById('vadBadge');
-  
   const meterFill = document.getElementById('meterFill');
   const levelValueText = document.getElementById('levelValueText');
-
   const statRms = document.getElementById('statRms');
   const statFloor = document.getElementById('statFloor');
   const statThreshold = document.getElementById('statThreshold');
-
   const predictionDisplay = document.getElementById('predictionDisplay');
   const predLabel = document.getElementById('predLabel');
   const predConf = document.getElementById('predConf');
   const lastEventTime = document.getElementById('lastEventTime');
-
   const probHealthyFill = document.getElementById('probHealthyFill');
   const probSuspectFill = document.getElementById('probSuspectFill');
   const probNoCoughFill = document.getElementById('probNoCoughFill');
   const probHealthyText = document.getElementById('probHealthyText');
   const probSuspectText = document.getElementById('probSuspectText');
   const probNoCoughText = document.getElementById('probNoCoughText');
-
   const specCanvas = document.getElementById('spectrogramCanvas');
   const specCtx = specCanvas.getContext('2d');
   const specStatusBadge = document.getElementById('specStatusBadge');
   const specPlaceholder = document.getElementById('specPlaceholder');
-
   const eventLogBody = document.getElementById('eventLogBody');
   const eventCountBadge = document.getElementById('eventCountBadge');
+  const causeCardsContainer = document.getElementById('causeCardsContainer');
 
-  // Oscilloscope State
+  // State
   const oscPoints = 120;
   const oscHistory = new Array(oscPoints).fill(0);
   let peakRmsScale = 1500;
   let totalEventsCount = 0;
   let isSessionActive = false;
+  let isAnalyzing = false;
   let sessionTimer = null;
   let sessionStartTime = 0;
-  let sessionDuration = 3.0;
+  let socket = null;
+  let reconnectTimer = null;
 
+  // ---- Symptom Management ----
+  window.toggleChip = function(el) {
+    el.classList.toggle('active');
+  };
+
+  function getSymptoms() {
+    const s = {};
+    document.querySelectorAll('.symptom-chip').forEach(chip => {
+      s[chip.dataset.symptom] = chip.classList.contains('active');
+    });
+    s.duration = document.getElementById('durationSelect').value;
+    s.phlegm = document.getElementById('phlegmSelect').value;
+    return s;
+  }
+
+  window.applyPreset = function(preset) {
+    // Clear all chips
+    document.querySelectorAll('.symptom-chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('durationSelect').value = 'recent';
+    document.getElementById('phlegmSelect').value = 'none_clear';
+
+    if (preset === 'cold') {
+      document.querySelector('[data-symptom="fever"]').classList.add('active');
+      document.getElementById('durationSelect').value = 'recent';
+      document.getElementById('phlegmSelect').value = 'yellow_green';
+    } else if (preset === 'asthma') {
+      document.querySelector('[data-symptom="wheezing"]').classList.add('active');
+      document.querySelector('[data-symptom="worse_at_night"]').classList.add('active');
+      document.getElementById('durationSelect').value = 'moderate';
+    } else if (preset === 'reflux') {
+      document.querySelector('[data-symptom="heartburn"]').classList.add('active');
+      document.querySelector('[data-symptom="worse_at_night"]').classList.add('active');
+      document.getElementById('durationSelect').value = 'chronic';
+    }
+  };
+
+  // ---- Oscilloscope ----
   function resizeOscilloscope() {
     const rect = oscCanvas.parentElement.getBoundingClientRect();
     oscCanvas.width = rect.width * window.devicePixelRatio;
@@ -889,234 +558,171 @@
     const w = oscCanvas.width / window.devicePixelRatio;
     const h = oscCanvas.height / window.devicePixelRatio;
     const centerY = h / 2;
-
     oscCtx.clearRect(0, 0, w, h);
-
-    oscCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    oscCtx.strokeStyle = 'rgba(255,255,255,0.04)';
     oscCtx.lineWidth = 1;
-    oscCtx.beginPath();
-    oscCtx.moveTo(0, centerY);
-    oscCtx.lineTo(w, centerY);
-    oscCtx.stroke();
-
+    oscCtx.beginPath(); oscCtx.moveTo(0, centerY); oscCtx.lineTo(w, centerY); oscCtx.stroke();
     oscCtx.strokeStyle = isSessionActive ? '#ef4444' : '#06b6d4';
     oscCtx.lineWidth = 2.0;
-    oscCtx.shadowColor = isSessionActive ? 'rgba(239, 68, 68, 0.8)' : 'rgba(6, 182, 212, 0.7)';
+    oscCtx.shadowColor = isSessionActive ? 'rgba(239,68,68,0.8)' : 'rgba(6,182,212,0.7)';
     oscCtx.shadowBlur = 8;
     oscCtx.beginPath();
-
     const stepX = w / (oscPoints - 1);
     for (let i = 0; i < oscPoints; i++) {
       const val = oscHistory[i];
       const normVal = Math.min(1.0, val / Math.max(800, peakRmsScale));
       const yOffset = normVal * (centerY * 0.85) * (i % 2 === 0 ? 1 : -1);
       const y = centerY - yOffset;
-      const x = i * stepX;
-
-      if (i === 0) oscCtx.moveTo(x, y);
-      else oscCtx.lineTo(x, y);
+      if (i === 0) oscCtx.moveTo(i * stepX, y); else oscCtx.lineTo(i * stepX, y);
     }
     oscCtx.stroke();
     oscCtx.shadowBlur = 0;
-
     requestAnimationFrame(renderOscilloscope);
   }
   requestAnimationFrame(renderOscilloscope);
 
-  // Render Spectrogram Heatmap (Inferno Palette)
+  // ---- Spectrogram (Inferno Palette) ----
   function renderSpectrogram(matrix) {
     if (!matrix || !matrix.length) return;
-    const rows = matrix.length;
-    const cols = matrix[0].length;
-    
-    specCanvas.width = cols;
-    specCanvas.height = rows;
-
+    const rows = matrix.length, cols = matrix[0].length;
+    specCanvas.width = cols; specCanvas.height = rows;
     const imgData = specCtx.createImageData(cols, rows);
     const data = imgData.data;
-
     for (let r = 0; r < rows; r++) {
       const rowIdx = rows - 1 - r;
       for (let c = 0; c < cols; c++) {
         const val = Math.max(0, Math.min(1.0, matrix[rowIdx][c]));
-        const pixelIdx = (r * cols + c) * 4;
-
-        let red, green, blue;
-        if (val < 0.25) {
-          const t = val / 0.25;
-          red = Math.floor(10 + t * 60);
-          green = 0;
-          blue = Math.floor(20 + t * 100);
-        } else if (val < 0.5) {
-          const t = (val - 0.25) / 0.25;
-          red = Math.floor(70 + t * 130);
-          green = Math.floor(10 + t * 30);
-          blue = Math.floor(120 - t * 60);
-        } else if (val < 0.75) {
-          const t = (val - 0.5) / 0.25;
-          red = Math.floor(200 + t * 45);
-          green = Math.floor(40 + t * 110);
-          blue = Math.floor(60 - t * 40);
-        } else {
-          const t = (val - 0.75) / 0.25;
-          red = Math.floor(245 + t * 10);
-          green = Math.floor(150 + t * 90);
-          blue = Math.floor(20 + t * 180);
-        }
-
-        data[pixelIdx] = red;
-        data[pixelIdx + 1] = green;
-        data[pixelIdx + 2] = blue;
-        data[pixelIdx + 3] = 255;
+        const px = (r * cols + c) * 4;
+        let R, G, B;
+        if (val < 0.25) { const t = val/0.25; R = 10+t*60; G = 0; B = 20+t*100; }
+        else if (val < 0.5) { const t = (val-0.25)/0.25; R = 70+t*130; G = 10+t*30; B = 120-t*60; }
+        else if (val < 0.75) { const t = (val-0.5)/0.25; R = 200+t*45; G = 40+t*110; B = 60-t*40; }
+        else { const t = (val-0.75)/0.25; R = 245+t*10; G = 150+t*90; B = 20+t*180; }
+        data[px] = R; data[px+1] = G; data[px+2] = B; data[px+3] = 255;
       }
     }
-
     specCtx.putImageData(imgData, 0, 0);
     specPlaceholder.style.display = 'none';
     specStatusBadge.textContent = 'Active Result';
     specStatusBadge.style.color = '#34d399';
   }
 
-  // WebSocket Connection
-  let socket = null;
-  let reconnectTimer = null;
-
+  // ---- WebSocket ----
   function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/ui`;
-
     statusDot.className = 'status-dot connecting';
     statusText.textContent = 'Connecting...';
-
     socket = new WebSocket(wsUrl);
-
     socket.onopen = () => {
       statusDot.className = 'status-dot connected';
       statusText.textContent = 'Connected (ws/ui)';
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-      }
+      if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
     };
-
     socket.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        handleServerMessage(msg);
-      } catch (err) {
-        console.error('Error parsing WS frame:', err);
-      }
+      try { handleServerMessage(JSON.parse(event.data)); } catch (e) { console.error('WS parse error:', e); }
     };
-
     socket.onclose = () => {
       statusDot.className = 'status-dot';
       statusText.textContent = 'Disconnected (retrying...)';
       scheduleReconnect();
     };
-
-    socket.onerror = (err) => {
-      socket.close();
-    };
+    socket.onerror = () => { socket.close(); };
   }
 
   function scheduleReconnect() {
     if (!reconnectTimer) {
-      reconnectTimer = setTimeout(() => {
-        reconnectTimer = null;
-        connectWebSocket();
-      }, 2500);
+      reconnectTimer = setTimeout(() => { reconnectTimer = null; connectWebSocket(); }, 2500);
     }
   }
 
-  // Handle Recording Trigger Click
+  // ---- Recording Toggle ----
   recordTriggerBtn.addEventListener('click', () => {
-    if (isSessionActive) return;
+    if (isAnalyzing) return;
 
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      alert("Server is connecting... Please wait a moment.");
+      alert("Server is connecting... Please wait.");
       return;
     }
 
-    // Send session command to server
-    socket.send(JSON.stringify({
-      action: "start_session",
-      duration: 3.0
-    }));
-
-    startClientSession(3.0);
+    if (!isSessionActive) {
+      // START recording
+      socket.send(JSON.stringify({ action: "start_session" }));
+      startClientSession();
+    } else {
+      // STOP recording & analyze
+      const symptoms = getSymptoms();
+      socket.send(JSON.stringify({ action: "stop_session", symptoms: symptoms }));
+      stopClientSession();
+    }
   });
 
-  function startClientSession(duration) {
+  function startClientSession() {
     isSessionActive = true;
-    sessionDuration = duration;
     sessionStartTime = performance.now();
 
-    // Visual updates
     recordTriggerBtn.className = 'trigger-btn recording';
-    triggerBtnText.textContent = 'RECORDING ACTIVE — COUGH NOW!';
+    triggerBtnText.textContent = '⏹️ STOP RECORDING & ANALYZE';
     hardwareLedDot.className = 'blue-led-dot blinking';
-    hardwareLedStatus.textContent = 'ESP32 Blue LED: BLINKING FAST (Recording 3s)';
+    hardwareLedStatus.textContent = 'ESP32 Blue LED: BLINKING FAST (Recording...)';
     hardwareLedStatus.style.color = '#60a5fa';
-
     vadBadge.textContent = 'SESSION RECORDING';
     vadBadge.className = 'vad-indicator session';
+    recordingTimerDisplay.style.display = 'block';
+    recordingTimerDisplay.textContent = '0:00';
 
-    countdownBarContainer.style.display = 'block';
-    countdownBarFill.style.width = '100%';
-
-    // Run countdown animation
     if (sessionTimer) clearInterval(sessionTimer);
     sessionTimer = setInterval(() => {
       const elapsed = (performance.now() - sessionStartTime) / 1000;
-      const remaining = Math.max(0, sessionDuration - elapsed);
-      const pct = (remaining / sessionDuration) * 100;
-      countdownBarFill.style.width = `${pct}%`;
-      triggerBtnText.textContent = `RECORDING (${remaining.toFixed(1)}s) — COUGH NOW!`;
+      const mins = Math.floor(elapsed / 60);
+      const secs = Math.floor(elapsed % 60);
+      recordingTimerDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }, 200);
+  }
 
-      if (remaining <= 0) {
-        clearInterval(sessionTimer);
-        sessionTimer = null;
-        triggerBtnText.textContent = 'ANALYZING ACOUSTICS...';
-      }
-    }, 50);
+  function stopClientSession() {
+    isSessionActive = false;
+    isAnalyzing = true;
+    if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
+
+    recordTriggerBtn.className = 'trigger-btn analyzing';
+    triggerBtnText.textContent = '⏳ ANALYZING ACOUSTICS...';
+    hardwareLedDot.className = 'blue-led-dot';
+    hardwareLedStatus.textContent = 'ESP32 Blue LED: OFF (Analyzing...)';
+    hardwareLedStatus.style.color = 'var(--text-secondary)';
+    vadBadge.textContent = 'ANALYZING';
+    vadBadge.className = 'vad-indicator';
   }
 
   function finishClientSession() {
     isSessionActive = false;
-    if (sessionTimer) {
-      clearInterval(sessionTimer);
-      sessionTimer = null;
-    }
+    isAnalyzing = false;
+    if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
 
     recordTriggerBtn.className = 'trigger-btn';
-    triggerBtnText.textContent = '🔄 RECORD AGAIN (3s COUGH)';
+    triggerBtnText.textContent = '🔴 START RECORDING';
     hardwareLedDot.className = 'blue-led-dot';
     hardwareLedStatus.textContent = 'ESP32 Blue LED: Standby (Session Complete)';
     hardwareLedStatus.style.color = 'var(--text-secondary)';
-
     vadBadge.textContent = 'LISTENING';
     vadBadge.className = 'vad-indicator';
-    countdownBarContainer.style.display = 'none';
+    recordingTimerDisplay.style.display = 'none';
   }
 
-  // Handle Server Messages
+  // ---- Server Message Handler ----
   function handleServerMessage(msg) {
     if (msg.type === 'init') {
-      if (msg.is_dummy_model) {
-        modelTag.textContent = 'DUMMY CLASSIFIER';
-        modelTag.className = 'model-tag dummy';
-      } else {
-        modelTag.textContent = 'TRAINED CNN';
-        modelTag.className = 'model-tag trained';
-      }
+      modelTag.textContent = msg.is_dummy_model ? 'DUMMY CLASSIFIER' : 'TRAINED CNN';
+      modelTag.className = msg.is_dummy_model ? 'model-tag dummy' : 'model-tag trained';
     } else if (msg.type === 'level') {
       updateAudioLevel(msg);
     } else if (msg.type === 'session_state') {
-      if (msg.state === 'recording' && !isSessionActive) {
-        startClientSession(msg.duration || 3.0);
-      }
+      if (msg.state === 'recording' && !isSessionActive) startClientSession();
+      else if (msg.state === 'analyzing') stopClientSession();
+    } else if (msg.type === 'session_error') {
+      finishClientSession();
+      alert(msg.message || 'Session error occurred.');
     } else if (msg.type === 'prediction') {
-      // Only display prediction & spectrogram if it is a session result
       handleSessionPrediction(msg);
     }
   }
@@ -1125,16 +731,12 @@
     const rms = msg.rms || 0;
     const floor = msg.noise_floor || 0;
     const thresh = msg.threshold || 0;
-
     statRms.textContent = rms.toFixed(1);
     statFloor.textContent = floor.toFixed(1);
     statThreshold.textContent = thresh.toFixed(1);
-
-    oscHistory.shift();
-    oscHistory.push(rms);
+    oscHistory.shift(); oscHistory.push(rms);
     if (rms > peakRmsScale) peakRmsScale = rms * 1.2;
     else peakRmsScale = Math.max(1200, peakRmsScale * 0.995);
-
     const meterPct = Math.min(100, Math.max(0, (rms / Math.max(500, thresh * 2.5)) * 100));
     meterFill.style.width = `${meterPct}%`;
     levelValueText.textContent = `${rms.toFixed(1)} RMS`;
@@ -1152,11 +754,9 @@
     // Update Result Card
     predictionDisplay.className = `prediction-display ${label}`;
     predLabel.className = `pred-label ${label}`;
-
     let labelDisplay = 'NO COUGH / NOISE';
     if (label === 'healthy') labelDisplay = 'HEALTHY COUGH';
     else if (label === 'cough_suspect') labelDisplay = 'COUGH SUSPECT';
-
     predLabel.textContent = labelDisplay;
     predConf.textContent = `${conf}% Confidence`;
 
@@ -1164,30 +764,34 @@
     const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     lastEventTime.textContent = `${timeStr} (${event.duration_sec}s)`;
 
-    // Update Probability Bars
-    const pHealthy = ((probs.healthy || 0) * 100).toFixed(1);
-    const pSuspect = ((probs.cough_suspect || 0) * 100).toFixed(1);
-    const pNoCough = ((probs.no_cough || 0) * 100).toFixed(1);
+    // Prob bars
+    const pH = ((probs.healthy||0)*100).toFixed(1);
+    const pS = ((probs.cough_suspect||0)*100).toFixed(1);
+    const pN = ((probs.no_cough||0)*100).toFixed(1);
+    probHealthyFill.style.width = `${pH}%`; probHealthyText.textContent = `${pH}%`;
+    probSuspectFill.style.width = `${pS}%`; probSuspectText.textContent = `${pS}%`;
+    probNoCoughFill.style.width = `${pN}%`; probNoCoughText.textContent = `${pN}%`;
 
-    probHealthyFill.style.width = `${pHealthy}%`;
-    probHealthyText.textContent = `${pHealthy}%`;
-
-    probSuspectFill.style.width = `${pSuspect}%`;
-    probSuspectText.textContent = `${pSuspect}%`;
-
-    probNoCoughFill.style.width = `${pNoCough}%`;
-    probNoCoughText.textContent = `${pNoCough}%`;
-
-    // Render Spectrogram Heatmap ONLY when result arrives
-    if (event.spectrogram) {
-      renderSpectrogram(event.spectrogram);
+    // Audio Descriptors
+    if (event.descriptors) {
+      const desc = event.descriptors;
+      document.getElementById('descType').textContent = desc.wet_label || '—';
+      document.getElementById('descType').style.color = desc.is_wet ? '#38bdf8' : '#fbbf24';
+      document.getElementById('descBouts').textContent = desc.bout_count || '—';
+      document.getElementById('descHarsh').textContent = desc.is_harsh ? `Yes (${desc.harshness_score})` : `No (${desc.harshness_score})`;
+      document.getElementById('descDur').textContent = desc.duration_sec ? `${desc.duration_sec}s` : '—';
     }
 
-    // Append to Event Log table
-    if (totalEventsCount === 1) {
-      eventLogBody.innerHTML = '';
+    // Spectrogram
+    if (event.spectrogram) renderSpectrogram(event.spectrogram);
+
+    // Cause Engine Cards
+    if (event.causes && event.causes.length > 0) {
+      renderCauses(event.causes);
     }
 
+    // Event Log
+    if (totalEventsCount === 1) eventLogBody.innerHTML = '';
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${timeStr}</td>
@@ -1198,9 +802,44 @@
     eventLogBody.insertBefore(row, eventLogBody.firstChild);
   }
 
+  function renderCauses(causes) {
+    causeCardsContainer.innerHTML = '';
+    const topCauses = causes.slice(0, 4);
+    topCauses.forEach((cause, idx) => {
+      const card = document.createElement('div');
+      card.className = 'cause-card';
+      const pctClass = cause.severity || 'low';
+      let evidenceHTML = '';
+      if (cause.evidence && cause.evidence.length > 0) {
+        evidenceHTML = '<ul class="cause-evidence">' +
+          cause.evidence.map(e => `<li>${e}</li>`).join('') +
+          '</ul>';
+      }
+      card.innerHTML = `
+        <div class="cause-card-header">
+          <div>
+            <div class="cause-name">${idx + 1}. ${cause.name}</div>
+            <div class="cause-subtext">${cause.subtext || ''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div class="cause-pct ${pctClass}">${cause.probability}%</div>
+            <span class="severity-badge ${pctClass}">${pctClass} risk</span>
+          </div>
+        </div>
+        ${evidenceHTML}
+      `;
+      causeCardsContainer.appendChild(card);
+    });
+
+    // Add disclaimer
+    const disc = document.createElement('div');
+    disc.style.cssText = 'font-size:0.72rem;color:var(--text-muted);text-align:center;padding:8px;margin-top:4px;border-top:1px solid var(--border-color);';
+    disc.textContent = '⚠️ Prescreening demo only — not a clinical diagnosis. Consult a healthcare professional.';
+    causeCardsContainer.appendChild(disc);
+  }
+
   connectWebSocket();
 })();
 </script>
-
 </body>
 </html>

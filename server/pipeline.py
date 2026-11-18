@@ -19,6 +19,7 @@ import scipy.io.wavfile as wavfile
 
 from server.config import config
 from server.model import CoughClassifierEngine
+from server.cause_engine import compute_audio_descriptors, cause_engine
 
 logger = logging.getLogger("cough_screener.pipeline")
 
@@ -210,9 +211,12 @@ class AudioPipeline:
 
         # Manual Recording Session state
         self.manual_session_active = False
+        self.manual_session_start_time = 0.0
         self.manual_session_end_time = 0.0
         self.manual_session_samples: List[np.ndarray] = []
-        self.manual_session_duration = 3.0
+        self.manual_session_duration = 0.0
+        self._pending_symptoms: Dict = {}
+        self._pending_finalize = False
 
         # Background worker control
         self.running = False
@@ -270,15 +274,27 @@ class AudioPipeline:
                 pass
         logger.info("[PIPELINE] Audio analysis loop stopped.")
 
-    def start_manual_session(self, duration_sec: float = 3.0):
-        """Starts an active manual recording window triggered by user UI click."""
+    def start_manual_session(self):
+        """Starts an open-ended manual recording session (user clicks Stop to end)."""
         self.manual_session_active = True
-        self.manual_session_duration = duration_sec
-        self.manual_session_end_time = time.time() + duration_sec
+        self.manual_session_start_time = time.time()
+        self.manual_session_end_time = time.time() + 30.0  # 30s safety guard
         # Seed with initial attack buffer from ring buffer
         pre_padding = int(config.SAMPLE_RATE * 0.1)
         self.manual_session_samples = [self.ring_buffer.get_latest(pre_padding)]
-        logger.info(f"[SESSION] Manual recording session started for {duration_sec}s.")
+        logger.info("[SESSION] Manual recording session started (open-ended, max 30s).")
+
+    def stop_manual_session(self, symptoms: dict = None):
+        """Stops the manual recording session and triggers finalization.
+        Returns True if a session was active and stopped."""
+        if not self.manual_session_active:
+            logger.warning("[SESSION] stop_manual_session called but no session is active.")
+            return False
+        self.manual_session_active = False
+        self.manual_session_duration = time.time() - self.manual_session_start_time
+        self._pending_symptoms = symptoms or {}
+        logger.info(f"[SESSION] Manual recording stopped after {self.manual_session_duration:.2f}s.")
+        return True
 
     async def _analysis_loop(self):
         """Processes 100ms audio windows periodically."""
@@ -301,13 +317,25 @@ class AudioPipeline:
             # Handle Manual Session
             if self.manual_session_active:
                 self.manual_session_samples.append(frame_samples)
+                # Safety guard: auto-stop after 30s
                 if now >= self.manual_session_end_time:
+                    logger.warning("[SESSION] Safety guard: auto-stopping after 30s.")
                     self.manual_session_active = False
-                    await self._finalize_manual_session()
-            else:
+                    self.manual_session_duration = now - self.manual_session_start_time
+                    self._pending_symptoms = {}
+                    self._pending_finalize = True
+
+            if not self.manual_session_active and not self._pending_finalize:
                 # Background ambient VAD tracking
                 is_above_threshold = frame_rms >= threshold
                 await self._process_vad_step(frame_samples, frame_rms, is_above_threshold, noise_floor, threshold)
+
+            # Check if finalization was requested (by stop_manual_session or safety guard)
+            if self._pending_finalize or (not self.manual_session_active and len(self.manual_session_samples) > 1):
+                # Only finalize if we actually have samples to process
+                if len(self.manual_session_samples) > 1:
+                    self._pending_finalize = False
+                    await self._finalize_manual_session()
 
             # Broadcast lightweight level telemetry
             level_msg = {
@@ -331,12 +359,27 @@ class AudioPipeline:
             await asyncio.sleep(sleep_time)
 
     async def _finalize_manual_session(self):
-        """Processes audio recorded during the manual session, runs CNN, and broadcasts."""
+        """Processes audio recorded during the manual session, runs CNN + cause engine, and broadcasts."""
         all_samples = np.concatenate(self.manual_session_samples) if self.manual_session_samples else np.array([], dtype=np.int16)
         self.manual_session_samples = []
         duration = self.manual_session_duration
+        symptoms = self._pending_symptoms
+        self._pending_symptoms = {}
 
         logger.info(f"[SESSION] Finalizing manual recording session ({len(all_samples)} samples, {duration:.2f}s).")
+
+        if len(all_samples) < config.SAMPLE_RATE * 0.3:
+            logger.warning("[SESSION] Recording too short (<0.3s). Discarding.")
+            error_payload = {
+                "type": "session_error",
+                "message": "Recording too short. Please record for at least 1 second.",
+            }
+            for cb in list(self.event_subscribers):
+                try:
+                    cb(error_payload)
+                except Exception:
+                    pass
+            return
 
         try:
             mel_spec = extract_log_mel_spectrogram(
@@ -353,6 +396,13 @@ class AudioPipeline:
             label, confidence, prob_dict = self.classifier.predict(mel_spec)
             waveform_downsampled = self._downsample_waveform(all_samples, target_points=200)
             spectrogram_ui = self._downsample_spectrogram(mel_spec, target_h=64, target_w=64)
+
+            # Compute audio descriptors (dry/wet, bout count, harshness)
+            descriptors = compute_audio_descriptors(all_samples, config.SAMPLE_RATE)
+            descriptors_dict = descriptors.to_dict()
+
+            # Run Cause Engine
+            causes = cause_engine.evaluate(prob_dict, descriptors, symptoms)
 
             timestamp_iso = datetime.now(timezone.utc).isoformat()
             file_stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:19]
@@ -377,9 +427,18 @@ class AudioPipeline:
                 "wav_file": wav_filename,
                 "is_session": True,
                 "is_dummy_model": getattr(self.classifier, "is_dummy", False),
+                "descriptors": descriptors_dict,
+                "symptoms": symptoms,
+                "causes": causes,
             }
             with open(json_path, "w") as f:
                 json.dump(sidecar_data, f, indent=2)
+
+            logger.info(
+                f"[PREDICTION] Label: {label.upper()} | Conf: {confidence * 100:.1f}% | "
+                f"Descriptors: {'Wet' if descriptors.is_wet else 'Dry'}, {descriptors.bout_count} bout(s) | "
+                f"Top Cause: {causes[0]['name'] if causes else 'N/A'}"
+            )
 
             event_payload = {
                 "type": "prediction",
@@ -394,6 +453,8 @@ class AudioPipeline:
                 "is_dummy_model": getattr(self.classifier, "is_dummy", False),
                 "waveform": waveform_downsampled,
                 "spectrogram": spectrogram_ui,
+                "descriptors": descriptors_dict,
+                "causes": causes,
             }
 
             for cb in list(self.event_subscribers):

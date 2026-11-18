@@ -1,0 +1,112 @@
+# Clinical Cause Engine Rules for Cough Prescreening
+# Transparent, weighted scoring model combining:
+#   1. AI Audio Prediction (healthy, cough_suspect, no_cough)
+#   2. Computed Audio Descriptors (dry vs wet, bout count, harshness)
+#   3. Patient Symptom Questionnaire (8 chips)
+
+causes:
+  viral_infection:
+    name: "Viral Respiratory Infection"
+    subtext: "COVID-19 / Influenza / Acute Bronchitis"
+    base_weight: 0.15
+    audio_triggers:
+      cough_suspect_prob: 0.40      # Strong correlation with COVID/viral model
+      wet_cough: 0.15               # Wet or phlegmy cough
+      harshness_high: 0.15          # Harsh acoustic profile
+    symptom_triggers:
+      fever: 0.35                   # Cardinal sign of viral infection
+      shortness_of_breath: 0.20
+      onset_recent: 0.15            # Started within the last 1-7 days
+      phlegm_yellow_green: 0.15
+    evidence_descriptions:
+      fever: "Elevated body temperature / fever"
+      cough_suspect: "AI cough acoustic biomarker profile positive"
+      wet_cough: "Acoustic envelope indicates productive/wet secretions"
+      onset_recent: "Acute onset (< 1 week duration)"
+      shortness_of_breath: "Shortness of breath reported"
+
+  asthma_reactive:
+    name: "Asthma / Reactive Airway Disease"
+    subtext: "Bronchospasm / Nocturnal Cough Variant"
+    base_weight: 0.10
+    audio_triggers:
+      dry_cough: 0.25               # Typically non-productive tight cough
+      long_bout: 0.20               # Multiple consecutive paroxysmal pulses
+      high_frequency_energy: 0.15   # High-pitched expiratory wheezing frequencies
+    symptom_triggers:
+      wheezing: 0.45                # Classical asthma symptom
+      worse_at_night: 0.35          # Circadian nocturnal airway constriction
+      no_fever: 0.15                # Non-infectious etiology
+    evidence_descriptions:
+      wheezing: "Wheezing / tight airway sensation"
+      worse_at_night: "Nocturnal cough exacerbation"
+      dry_cough: "Non-productive acoustic profile"
+      long_bout: "Repetitive paroxysmal cough pulses"
+
+  allergy_postnasal:
+    name: "Allergic Rhinitis / Post-Nasal Drip"
+    subtext: "Upper Airway Cough Syndrome (UACS)"
+    base_weight: 0.10
+    audio_triggers:
+      dry_cough: 0.20
+      throat_clearing_bursts: 0.15
+    symptom_triggers:
+      seasonal_allergy: 0.45        # History of rhinitis, pollen, dust
+      no_fever: 0.20                # Absence of systemic infection
+      phlegm_clear_or_none: 0.15
+      itchy_throat: 0.15
+    evidence_descriptions:
+      seasonal_allergy: "Seasonal allergy / environmental sensitivity"
+      no_fever: "Absence of fever (non-infectious)"
+      dry_cough: "Tickling throat / dry acoustic signature"
+
+  gerd_reflux:
+    name: "Gastroesophageal Reflux (GERD) Cough"
+    subtext: "Acid Reflux / Neurogenic Vagal Irritation"
+    base_weight: 0.08
+    audio_triggers:
+      dry_cough: 0.20
+      isolated_single_pulses: 0.15
+    symptom_triggers:
+      heartburn_acidity: 0.50       # Direct GI reflux symptom
+      worse_at_night: 0.25          # Supine position reflux
+      chronic_duration: 0.20        # Persisting for weeks (> 3 weeks)
+      no_fever: 0.15
+    evidence_descriptions:
+      heartburn_acidity: "Heartburn / acid regurgitation reported"
+      worse_at_night: "Symptoms triggered by lying down / nighttime"
+      chronic_duration: "Long-standing persistent cough (> 3 weeks)"
+
+  smokers_cough:
+    name: "Smoker's Cough / Chronic Airway Irritation"
+    subtext: "Mucociliary Dysfunction"
+    base_weight: 0.05
+    audio_triggers:
+      wet_cough: 0.25               # Mucus accumulation
+      harshness_high: 0.20          # Chronic vocal cord / airway thickening
+    symptom_triggers:
+      smoker: 0.60                  # Tobacco / vaping exposure
+      chronic_duration: 0.25        # Persistent (> 3 weeks)
+      morning_worse: 0.20
+    evidence_descriptions:
+      smoker: "Active smoking / vaping history"
+      wet_cough: "Productive acoustic mucus profile"
+      chronic_duration: "Chronic duration exceeding 3 weeks"
+
+  dry_air_irritation:
+    name: "Dry Air / Environmental Throat Irritation"
+    subtext: "Transient Pharyngeal Irritation"
+    base_weight: 0.12
+    audio_triggers:
+      dry_cough: 0.20
+      brief_duration: 0.20          # Short, single event (< 1.5s)
+      low_harshness: 0.15
+    symptom_triggers:
+      no_fever: 0.20
+      no_wheeze: 0.20
+      no_heartburn: 0.15
+      no_allergy: 0.15
+    evidence_descriptions:
+      brief_duration: "Brief, isolated cough burst without stridor"
+      no_fever: "No constitutional illness symptoms"
+      dry_cough: "Dry, non-productive acoustic profile"
