@@ -1263,6 +1263,7 @@
       hardwareLedStatus.style.color = 'var(--text-secondary)';
       vadBadge.textContent = 'AUDIO LOCKED';
       vadBadge.style.color = '#10b981';
+      recordingTimerDisplay.style.display = 'none';
       if (recordingInterval) { clearInterval(recordingInterval); recordingInterval = null; }
     }
   }
