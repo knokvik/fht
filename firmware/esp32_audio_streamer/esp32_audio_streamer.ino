@@ -34,14 +34,13 @@
 // Set to 0 for live WiFi WebSocket streaming to the Python PC server.
 #define USE_SERIAL_LOOPBACK 0
 
-// WiFi Credentials
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+// WiFi Credentials (same hotspot connected to your laptop and ESP32)
+const char* WIFI_SSID     = "regmig";
+const char* WIFI_PASSWORD = "YOUR_HOTSPOT_PASSWORD";
 
 // PC Server Settings
-// Replace with your PC's local LAN IP (e.g., 192.168.1.50)
-// On Mac: ipconfig getifaddr en0 | On Linux: hostname -I | On Windows: ipconfig
-const char* SERVER_HOST   = "192.168.1.100";
+// Laptop IP on the hotspot network (172.24.167.24)
+const char* SERVER_HOST   = "172.24.167.24";
 const int   SERVER_PORT   = 8000;
 const char* SERVER_PATH   = "/ws/audio";
 
